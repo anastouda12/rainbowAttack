@@ -1,5 +1,9 @@
 #include "src/headers/func-utils.hpp"
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+
+
 
 namespace rainbow {
 
@@ -36,8 +40,14 @@ void writePrecomputedValuesIntoTable(std::ofstream & table, std::set<std::pair<s
     table.seekp(0, std::ios_base::beg);
    for(std::pair<std::string, std::string> headTailsChain : precomputedValues )
    {
-       table << headTailsChain.first << "   " << headTailsChain.second << std::endl;
+       table << headTailsChain.first << " " << headTailsChain.second << std::endl;
    }
+}
+
+float getSizeOnBytes(const float mb)
+{
+    const unsigned byteToMb = 1048576;
+    return mb * byteToMb;
 }
 
 }

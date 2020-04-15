@@ -18,6 +18,8 @@ std::vector<std::string> getHashesInit(std::string file);
 
 void writePrecomputedValuesIntoTable(std::ofstream & table, std::set<std::pair<std::string,std::string>> precomputedValues);
 
+float getSizeOnBytes(const float mb);
+
 } // end namespace rainbow
 
 #endif // FUNCUTILS_HPP

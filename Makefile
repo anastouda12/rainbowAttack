@@ -768,7 +768,9 @@ src/rainbowAttack.o: src/rainbowAttack.cpp src/headers/rainbowAttack.hpp \
 src/rainbowTableGen.o: src/rainbowTableGen.cpp src/headers/rainbowTableGen.hpp \
 		src/headers/sha256.h \
 		src/headers/reduction.hpp \
-		src/headers/func-utils.hpp
+		src/headers/func-utils.hpp \
+		src/headers/passwd-utils.hpp \
+		src/headers/random.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/rainbowTableGen.o src/rainbowTableGen.cpp
 
 src/reduction.o: src/reduction.cpp src/headers/reduction.hpp \

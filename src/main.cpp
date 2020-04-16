@@ -5,7 +5,7 @@ using namespace std;
 
 int main()
 {
-    rainbow::RainbowTableGen red(0.0004,"anas.txt");
-    red.generate();
+    rainbow::RainbowTableGen red(0.0010);
+    red.generateTable();
     return 0;
 }

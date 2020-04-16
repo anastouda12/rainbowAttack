@@ -9,44 +9,43 @@
 
 namespace rainbow {
 
-RainbowTableGen::RainbowTableGen(const float size, std::string path):
-size_{size}, ofstreamRainbowTable_{path}
+RainbowTableGen::RainbowTableGen(const float size):
+size_{size}, rainbowTableFile_{"RainbowTable.txt"}
 {
-    ofstreamRainbowTable_.open(path, std::ios::out | std::ios::app);
+    rainbowTableFile_.open("RainbowTable.txt", std::ios::out | std::ios::app);
 }
 
 RainbowTableGen::~RainbowTableGen()
 {
-    this->ofstreamRainbowTable_.close();
+    this->rainbowTableFile_.close();
 }
 
-void RainbowTableGen::print()
+void RainbowTableGen::generateTable()
 {
-
-}
-
-void RainbowTableGen::generate()
-{
-    std::cout << ">  RainbowTable generator has started.  <" << std::endl;
-    std::cout << "=========================================" << std::endl;
+    std::cout << ">>>>>>>  RainbowTable generator has started.  <<<<<<<" << std::endl;
+    std::cout << "======================================================" << std::endl;
     std::set<std::pair<std::string,std::string>> tablePrecomputed;
     float sizeTableOnByte = getSizeOnBytes(this->size_);
     float currentSize = 0;
+    std::cout  << std::fixed << std::setprecision(4);
+    std::cout << "[INFO] : Generation table of size +- :" << sizeTableOnByte << " Bytes" << std::endl;
     while(currentSize < sizeTableOnByte)
     {
         std::pair<std::string, std::string> precomputed = buildPrecomputedHashChain();
         tablePrecomputed.insert(precomputed);
         currentSize += precomputed.first.size() + std::string(" ").size() + precomputed.second.size();
-        std::cout  << std::fixed << std::setprecision(5);
-        std::cout << (double) ((double) currentSize / (double) sizeTableOnByte)*100 << "%...\r";
+        std::cout  << std::fixed << std::setprecision(5) << std::setw(17);
+        std::cout << (double) ((double) currentSize / (double) sizeTableOnByte)*100 << "% \r";
         std::cout.flush();
     }
-    writePrecomputedValuesIntoTable(this->ofstreamRainbowTable_,tablePrecomputed);
+    std::cout << "\r" << std::flush;
+    writePrecomputedValuesIntoTable(this->rainbowTableFile_,tablePrecomputed);
+    std::cout << "100% Finish !" << std::endl;
     std::cout << "[SUCCES] : RainbowTable was generated." << std::endl;
-    std::cout << "=========================================" << std::endl;
+    std::cout << "======================================================" << std::endl;
 }
 
-std::string RainbowTableGen::getTail(std::string password) const
+std::string RainbowTableGen::calculTail(std::string password) const
 {
     Reduction reduction(password.length(),ALPHABET);
     for(unsigned column = 0;column < HASH_LEN; column++)
@@ -61,7 +60,7 @@ std::pair<std::string,std::string> RainbowTableGen::buildPrecomputedHashChain() 
 {
     std::pair<std::string, std::string> headTailsChain;
     std::string password = generate_passwd(random(MINIMAL_PASSWORD_LENGTH,MAXIMAL_PASSWORD_LENGTH));
-    std::string tail = getTail(password);
+    std::string tail = calculTail(password);
     headTailsChain.first = password;
     headTailsChain.second = tail;
     return headTailsChain;

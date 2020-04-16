@@ -14,22 +14,21 @@ class RainbowTableGen
 {
 
     /**
-     * @brief Size of the rainbowTable.
+     * @brief Size on MegaByte of the rainbowTable.
      */
     float size_;
 
     /**
-     * @brief Outputstream of the file containing the rainbow table.
+     * @brief File containing the rainbow table.
      */
-    std::ofstream ofstreamRainbowTable_;
+    std::ofstream rainbowTableFile_;
 
 public :
 
-    RainbowTableGen(const float size, std::string path);
+    RainbowTableGen(const float size);
     ~RainbowTableGen();
-    void generate();
-    void print();
-    std::string getTail(std::string password) const;
+    void generateTable();
+    std::string calculTail(std::string password) const;
     std::pair<std::string,std::string> buildPrecomputedHashChain() const;
 
 };

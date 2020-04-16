@@ -4,7 +4,10 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <set>
+
+#define msToMinute(ms) ((ms/(1000*60))%60)
+#define msToHours(ms) ((ms/(1000*60*60))%24)
+#define msToSecond(ms) ((ms/1000)%60)
 
 namespace rainbow {
 
@@ -15,8 +18,6 @@ constexpr const char * ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 void hexConvert(const char *text, unsigned char *bytes);
 
 std::vector<std::string> getHashesInit(std::string file);
-
-void writePrecomputedValuesIntoTable(std::ofstream & table, std::set<std::pair<std::string,std::string>> precomputedValues);
 
 float getSizeOnBytes(const float mb);
 

@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <utility>
+#include <set>
 
 namespace rainbow {
 
@@ -28,8 +29,11 @@ public :
     RainbowTableGen(const float size);
     ~RainbowTableGen();
     void generateTable();
+
+private:
     std::string calculTail(std::string password) const;
     std::pair<std::string,std::string> buildPrecomputedHashChain() const;
+    void writePrecomputedValuesIntoTable(std::ofstream & table, std::set<std::pair<std::string,std::string>> precomputedValues);
 
 };
 

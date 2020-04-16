@@ -34,16 +34,6 @@ std::vector<std::string> getHashesInit(std::string file)
     return hashes;
 }
 
-void writePrecomputedValuesIntoTable(std::ofstream & table, std::set<std::pair<std::string,std::string>> precomputedValues)
-{
-    table.clear();
-    table.seekp(0, std::ios_base::beg);
-   for(std::pair<std::string, std::string> headTailsChain : precomputedValues )
-   {
-       table << headTailsChain.first << " " << headTailsChain.second << std::endl;
-   }
-}
-
 float getSizeOnBytes(const float mb)
 {
     const unsigned byteToMb = 1048576;

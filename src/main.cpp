@@ -6,8 +6,7 @@ using namespace std;
 
 int main()
 {
-    rainbow::RainbowTableGen red(0.0011);
-    red.loadFromFile("RainbowTable.txt");
-    rainbow::RainbowAttack at(red);
+    rainbow::RainbowTableGen red(400);
+    red.generateTable();
     return 0;
 }

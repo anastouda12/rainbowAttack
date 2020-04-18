@@ -1,14 +1,13 @@
 TEMPLATE = app
-CONFIG += console c++1z
+CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
+CONFIG += c++17
 CONFIG += object_parallel_to_source
 TARGET = RainbowAttack
 
 
-QMAKE_CXXFLAGS += -std=c++17
-DEFINES += QT_DEPRECATED_WARNINGS
-
+QMAKE_CXXFLAGS += -pedantic-errors -std=c++17 -Wall
 SOURCES += \
         src/func-utils.cpp \
         src/main.cpp \

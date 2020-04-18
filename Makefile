@@ -14,9 +14,9 @@ EQ            = =
 
 CC            = /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
 CXX           = /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++
-DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG
+DEFINES       = -DQT_QML_DEBUG
 CFLAGS        = -pipe -g $(EXPORT_ARCH_ARGS) -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.13 -Wall -Wextra -fPIC $(DEFINES)
-CXXFLAGS      = -pipe -stdlib=libc++ -std=c++17 -g -std=gnu++1z $(EXPORT_ARCH_ARGS) -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.13 -Wall -Wextra -fPIC $(DEFINES)
+CXXFLAGS      = -pipe -stdlib=libc++ -pedantic-errors -std=c++17 -Wall -g -std=gnu++1z $(EXPORT_ARCH_ARGS) -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.13 -Wall -Wextra -fPIC $(DEFINES)
 INCPATH       = -I. -I../../../Qt5.14.2/5.14.2/clang_64/mkspecs/macx-clang
 QMAKE         = /Users/anastoudalachiri/Qt5.14.2/5.14.2/clang_64/bin/qmake
 DEL_FILE      = rm -f
@@ -758,11 +758,15 @@ compiler_clean:
 src/func-utils.o: src/func-utils.cpp src/headers/func-utils.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/func-utils.o src/func-utils.cpp
 
-src/main.o: src/main.cpp src/headers/rainbowTableGen.hpp
+src/main.o: src/main.cpp src/headers/rainbowTableGen.hpp \
+		src/headers/rainbowAttack.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/main.o src/main.cpp
 
 src/rainbowAttack.o: src/rainbowAttack.cpp src/headers/rainbowAttack.hpp \
-		src/headers/rainbowTableGen.hpp
+		src/headers/rainbowTableGen.hpp \
+		src/headers/reduction.hpp \
+		src/headers/func-utils.hpp \
+		src/headers/sha256.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/rainbowAttack.o src/rainbowAttack.cpp
 
 src/rainbowTableGen.o: src/rainbowTableGen.cpp src/headers/rainbowTableGen.hpp \

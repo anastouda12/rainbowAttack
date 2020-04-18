@@ -7,7 +7,7 @@ CONFIG += object_parallel_to_source
 TARGET = RainbowAttack
 
 
-QMAKE_CXXFLAGS += -pedantic-errors -std=c++17 -Wall
+QMAKE_CXXFLAGS += -std=c++17
 SOURCES += \
         src/func-utils.cpp \
         src/main.cpp \

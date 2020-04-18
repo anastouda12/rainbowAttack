@@ -44,7 +44,7 @@ std::optional<std::string> RainbowAttack::crackPassword(const std::string & hash
     std::optional<std::pair<std::string,std::string>> headTail = pwdBinarySearch(hash);
     while (nbFailuresToFindHead < 10 && step <= 50000 && !foundPassword) {
         if(headTail.has_value()){ // tail found ==> head found
-            head = headTail.value().first;
+            head = headTail->first;
             current = head;
             previous = current;
             current = sha256(current);

@@ -21,6 +21,8 @@ std::vector<std::string> getHashesInit(std::string file);
 
 float getSizeOnBytes(const float mb);
 
+float getSizeOnMegaBytes(const float bytes);
+
 } // end namespace rainbow
 
 #endif // FUNCUTILS_HPP

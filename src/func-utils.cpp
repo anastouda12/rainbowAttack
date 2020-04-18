@@ -40,4 +40,10 @@ float getSizeOnBytes(const float mb)
     return mb * byteToMb;
 }
 
+float getSizeOnMegaBytes(const float bytes)
+{
+    const unsigned byteToMb = 1048576;
+    return bytes /  byteToMb;
+}
+
 }

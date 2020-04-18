@@ -1,6 +1,5 @@
 #include "src/headers/rainbowTableGen.hpp"
 #include <iostream>
-#include <set>
 #include <string.h>
 #include "src/headers/sha256.h"
 #include "src/headers/reduction.hpp"
@@ -12,46 +11,53 @@ using namespace std::chrono;
 namespace rainbow {
 
 RainbowTableGen::RainbowTableGen(const float size):
-size_{size}, rainbowTableFile_{"RainbowTable.txt"}
-{
-    rainbowTableFile_.open("RainbowTable.txt", std::ios::out | std::ios::app);
-}
+size_{size}, tablePrecomputed_{}, rainbowTableFile_{}
+{}
 
 RainbowTableGen::~RainbowTableGen()
 {
-    this->rainbowTableFile_.close();
+    if(this->rainbowTableFile_.is_open()) this->rainbowTableFile_.close();
+    this->tablePrecomputed_.clear();
 }
 
 void RainbowTableGen::generateTable()
 {
+    rainbowTableFile_.open("RainbowTable.txt", std::ios::out | std::ios::binary | std::ios::trunc);
+    if(this->rainbowTableFile_.is_open()){
     std::cout << ">>>>>>>  RainbowTable generator has started.  <<<<<<<" << std::endl;
     std::cout << "======================================================" << std::endl;
-    std::set<std::pair<std::string,std::string>> tablePrecomputed;
     float sizeTableOnByte = getSizeOnBytes(this->size_);
     float currentSize = 0;
     std::cout  << std::fixed << std::setprecision(4);
     std::cout << "[INFO] : Generation table of size +- : " << sizeTableOnByte << " Bytes" << std::endl;
     auto start = high_resolution_clock::now();
+    unsigned counter = 0;
     while(currentSize < sizeTableOnByte)
     {
+        counter++;
         std::pair<std::string, std::string> precomputed = buildPrecomputedHashChain();
-        tablePrecomputed.insert(precomputed);
-        currentSize += precomputed.first.size() + precomputed.second.size();
+        insertToPrecomputedOrdered(precomputed);
+        currentSize += precomputed.first.size() + std::string(" ").size() + precomputed.second.size();
         std::cout  << std::fixed << std::setprecision(5) << std::setw(17);
         std::cout << (double) ((double) currentSize / (double) sizeTableOnByte)*100 << "% \r";
         std::cout.flush();
     }
+    std::cout << "\r" << std::flush;
+    writePrecomputedValuesIntoTable();
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
-    std::cout << "\r" << std::flush;
-    writePrecomputedValuesIntoTable(this->rainbowTableFile_,tablePrecomputed);
     std::cout << "100%... Loading finish !" << std::endl;
     std::cout << "[SUCCES] : RainbowTable was generated" <<std::endl;
     std::cout << "[DURATION] : Generated on " << std::fixed << std::setprecision(5);
     std::cout << msToHours(duration.count()) << " hours : ";
     std::cout << msToMinute(duration.count()) << " minutes : ";
     std::cout << msToSecond(duration.count()) << " seconds" << std::endl;
+    std::cout << "[STATS] : " << counter << " passwords generated" << std::endl;
     std::cout << "======================================================" << std::endl;
+    }else{
+        std::cerr << "[ERROR] : Opening file 'RainbowTable.txt' failed" << std::endl;
+    }
+    this->rainbowTableFile_.close();
 }
 
 std::string RainbowTableGen::calculTail(std::string password) const
@@ -75,14 +81,75 @@ std::pair<std::string,std::string> RainbowTableGen::buildPrecomputedHashChain() 
     return headTailsChain;
 }
 
-void RainbowTableGen::writePrecomputedValuesIntoTable(std::ofstream & table, std::set<std::pair<std::string,std::string>> precomputedValues)
+void RainbowTableGen::writePrecomputedValuesIntoTable()
 {
-    table.clear();
-    table.seekp(0, std::ios_base::beg);
-   for(std::pair<std::string, std::string> headTailsChain : precomputedValues )
-   {
-       table << headTailsChain.first << headTailsChain.second;
-   }
+    if(this->rainbowTableFile_.is_open()){
+        this->rainbowTableFile_.clear();
+        this->rainbowTableFile_.seekp(0, std::ios_base::beg);
+        for(std::pair<std::string, std::string> headTailsChain : this->tablePrecomputed_ )
+        {
+           this->rainbowTableFile_ << headTailsChain.first << " " << headTailsChain.second << std::endl;
+        }
+    }else{
+        std::cerr << "[ERROR] : Opening file 'RainbowTable.txt' failed" << std::endl;
+    }
+
 }
+
+void RainbowTableGen::loadFromFile(const std::string &fileName)
+{
+    std::ifstream in(fileName.c_str(),std::ios::binary);
+    if (in.is_open()) {
+        // Read the chains.
+        std::string pwd, hash;
+        in >> pwd;
+        in >> hash;
+        while(in) { // While file contains rows, read and insert in the rainbowtable
+            this->tablePrecomputed_.push_back(make_pair(pwd,hash));
+            in >> pwd;
+            in >> hash;
+        }
+    }else{
+        std::cerr << "[ERROR] : Could not read from file \"" << fileName << "\"." << std::endl;
+    }
+    // we get the size of file
+    in.close();
+    std::ifstream ss(fileName, std::ifstream::ate | std::ifstream::binary); // we need ate flag
+    this->size_ = getSizeOnMegaBytes(ss.tellg());
+    in.close();
+}
+
+std::vector<std::pair<std::string,std::string>> RainbowTableGen::getTablePrecomputed() const
+{
+    return this->tablePrecomputed_;
+}
+
+void RainbowTableGen::insertToPrecomputedOrdered(const std::pair<std::string, std::string> & pair)
+{
+    // Find the position where the pair should be inserted, and insert it. O(log n) time.
+   int index = findIndexOrdered(pair.second);
+   this->tablePrecomputed_.insert(this->tablePrecomputed_.begin()+index, pair);
+
+}
+
+int RainbowTableGen::findIndexOrdered(const std::string & hash) const
+{
+    // Searches for hash using the binary search algorithm.
+    int min = 0, max = this->tablePrecomputed_.size() - 1;
+        int mid = (min + max) / 2, comp;
+        while (min <= max) {
+            comp = hash.compare(this->tablePrecomputed_[mid].second);
+            if (comp == 0) {
+                return mid;
+            } else if (comp < 0) {
+                max = mid - 1;
+            } else {
+                min = mid + 1;
+            }
+            mid = (min + max) / 2;
+        }
+        return min;
+}
+
 
 }

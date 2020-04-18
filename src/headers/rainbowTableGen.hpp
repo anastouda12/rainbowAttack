@@ -7,7 +7,7 @@
 
 #include <fstream>
 #include <utility>
-#include <set>
+#include <vector>
 
 namespace rainbow {
 
@@ -20,6 +20,11 @@ class RainbowTableGen
     float size_;
 
     /**
+     * @brief tablePrecomputed Table precomputed of Head pwd and tail hash.
+     */
+    std::vector<std::pair<std::string,std::string>> tablePrecomputed_;
+
+    /**
      * @brief File containing the rainbow table.
      */
     std::ofstream rainbowTableFile_;
@@ -29,11 +34,16 @@ public :
     RainbowTableGen(const float size);
     ~RainbowTableGen();
     void generateTable();
+    void loadFromFile(const std::string& fileName);
+    std::vector<std::pair<std::string,std::string>> getTablePrecomputed() const;
 
 private:
     std::string calculTail(std::string password) const;
     std::pair<std::string,std::string> buildPrecomputedHashChain() const;
-    void writePrecomputedValuesIntoTable(std::ofstream & table, std::set<std::pair<std::string,std::string>> precomputedValues);
+    void writePrecomputedValuesIntoTable();
+    void insertToPrecomputedOrdered(const std::pair<std::string, std::string> & pair);
+    int findIndexOrdered(const std::string & hash) const;
+
 
 };
 

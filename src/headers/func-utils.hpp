@@ -17,8 +17,6 @@ constexpr const char * ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 void hexConvert(const char *text, unsigned char *bytes);
 
-std::vector<std::string> getHashesInit(std::string file);
-
 float getSizeOnBytes(const float mb);
 
 float getSizeOnMegaBytes(const float bytes);

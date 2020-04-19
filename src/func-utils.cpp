@@ -17,23 +17,6 @@ void hexConvert(const char *text, unsigned char *bytes)
     }
 }
 
-std::vector<std::string> getHashesInit(std::string file)
-{
-    std::ifstream in(file);
-    std::vector<std::string> hashes;
-    if(in.fail())
-    {
-        std::cerr << "[ERROR]: " << "cannot open the file : " << file << std::endl;
-        std::exit(-3);
-    }
-    std::string hash;
-    while(std::getline(in, hash))
-    {
-        hashes.push_back(hash);
-    }
-    return hashes;
-}
-
 float getSizeOnBytes(const float mb)
 {
     const unsigned byteToMb = 1048576;

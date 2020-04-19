@@ -14,6 +14,10 @@ RainbowTableGen::RainbowTableGen(const float size):
 size_{size}, tablePrecomputed_{}, rainbowTableFile_{}
 {}
 
+RainbowTableGen::RainbowTableGen():
+    size_{0}, tablePrecomputed_{}, rainbowTableFile_{}
+{}
+
 RainbowTableGen::~RainbowTableGen()
 {
     if(this->rainbowTableFile_.is_open()) this->rainbowTableFile_.close();
@@ -31,11 +35,12 @@ void RainbowTableGen::generateTable()
     std::cout  << std::fixed << std::setprecision(4);
     std::cout << "[INFO] : Generation table of size +- : " << sizeTableOnByte << " Bytes" << std::endl;
     auto start = high_resolution_clock::now();
-    unsigned counter = 0;
+    unsigned counterEnregistrement = 0;
+    std::pair<std::string, std::string> precomputed;
     while(currentSize < sizeTableOnByte)
     {
-        counter++;
-        std::pair<std::string, std::string> precomputed = buildPrecomputedHashChain();
+        counterEnregistrement++;
+        precomputed = buildPrecomputedHashChain();
         insertToPrecomputedOrdered(precomputed);
         currentSize += precomputed.first.size() + std::string(" ").size() + precomputed.second.size();
         std::cout  << std::fixed << std::setprecision(5) << std::setw(17);
@@ -47,12 +52,12 @@ void RainbowTableGen::generateTable()
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
     std::cout << "100%... Loading finish !" << std::endl;
-    std::cout << "[SUCCES] : RainbowTable was generated" <<std::endl;
+    std::cout << "[SUCCES] : RainbowTable was generated on file 'Build/RainbowTable.txt'" <<std::endl;
     std::cout << "[DURATION] : Generated on " << std::fixed << std::setprecision(5);
     std::cout << msToHours(duration.count()) << " hours : ";
     std::cout << msToMinute(duration.count()) << " minutes : ";
     std::cout << msToSecond(duration.count()) << " seconds" << std::endl;
-    std::cout << "[STATS] : " << counter << " passwords generated" << std::endl;
+    std::cout << "[STATS] : " << counterEnregistrement << " passwords generated" << std::endl;
     std::cout << "======================================================" << std::endl;
     }else{
         std::cerr << "[ERROR] : Opening file 'RainbowTable.txt' failed" << std::endl;
@@ -63,7 +68,7 @@ void RainbowTableGen::generateTable()
 std::string RainbowTableGen::calculTail(std::string password) const
 {
     Reduction reduction(password.length(),ALPHABET);
-    for(unsigned column = 0;column < HASH_LEN; column++)
+    for(unsigned column = 0;column <HASH_LEN; column++)
     {
         password = sha256(password);
         password = reduction.reduce(password,column);

@@ -31,6 +31,7 @@ class RainbowTableGen
 
 public :
 
+    RainbowTableGen();
     RainbowTableGen(const float size);
     ~RainbowTableGen();
     void generateTable();

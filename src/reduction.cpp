@@ -22,7 +22,7 @@ Reduction::Reduction(unsigned passLength, std::string alphabet):
         current = bytes[(i + column) % SHA256_SIZE_BYTE];
         reduction += this->alphabet_[current % this->alphabet_.size()];
     }
-        return reduction;
+    return reduction;
 }
 
  void Reduction::setPasswordLength(unsigned int length)

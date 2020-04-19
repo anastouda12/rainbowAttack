@@ -6,8 +6,10 @@
 
 namespace rainbow {
 
-RainbowAttack::RainbowAttack(RainbowTableGen & table): rainbowTable_{table}
-{}
+RainbowAttack::RainbowAttack(RainbowTableGen & table, std::string pathPasswordsToCrack): rainbowTable_{table}, passHashToCrack_{}
+{
+    initPasswordsToCrack(pathPasswordsToCrack);
+}
 
 // source : Binary search inspired by https://www.geeksforgeeks.org/
 std::optional<std::pair<std::string,std::string>> RainbowAttack::pwdBinarySearch(const std::string & hash) const
@@ -64,6 +66,22 @@ std::optional<std::string> RainbowAttack::crackPassword(const std::string & hash
         }
     }
     return password;
+}
+
+
+void RainbowAttack::initPasswordsToCrack(const std::string file)
+{
+    std::ifstream in(file);
+    if(in.fail())
+    {
+        std::cerr << "[ERROR]: " << "cannot open the file : " << file << std::endl;
+        std::exit(-3);
+    }
+    std::string hash;
+    while(std::getline(in, hash))
+    {
+        this->passHashToCrack_.push_back(hash);
+    }
 }
 
 

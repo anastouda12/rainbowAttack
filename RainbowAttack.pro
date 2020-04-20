@@ -13,7 +13,6 @@ SOURCES += \
         src/main.cpp \
         src/rainbowAttack.cpp \
         src/rainbowTableGen.cpp \
-        src/reduction.cpp \
         src/sha256.cpp
 
 DESTDIR = $$PWD/build

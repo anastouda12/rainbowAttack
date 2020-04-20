@@ -3,6 +3,7 @@
 #include "src/headers/rainbowAttack.hpp"
 
 using namespace std;
+using namespace rainbow;
 
 int commandManager(int argc, char **argv);
 void help();
@@ -11,7 +12,7 @@ void rainbowAttack(std::string pwdPath);
 
 int main(int argc, char **argv)
 {
-    return commandManager(argc,argv);
+   return commandManager(argc,argv);
 }
 
 
@@ -36,6 +37,7 @@ int commandManager(int argc, char**argv)
     }else if(strcmp(argv[1], "attack") == 0){
         if(argc < 3){
             std::cerr << "[USAGE]: " << "Path of file containing hashes passwords needed : <attack> <pathFile>" << std::endl;
+            return -3;
         }
        rainbowAttack(argv[2]);
     }else{
@@ -67,6 +69,7 @@ void rainbowAttack(std::string pwdPath)
     rainbow::RainbowTableGen gen;
     gen.loadFromFile("RainbowTable.txt");
     rainbow::RainbowAttack att(gen,pwdPath);
+    att.attack();
 }
 
 

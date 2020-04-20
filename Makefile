@@ -56,13 +56,11 @@ SOURCES       = src/func-utils.cpp \
 		src/main.cpp \
 		src/rainbowAttack.cpp \
 		src/rainbowTableGen.cpp \
-		src/reduction.cpp \
 		src/sha256.cpp 
 OBJECTS       = src/func-utils.o \
 		src/main.o \
 		src/rainbowAttack.o \
 		src/rainbowTableGen.o \
-		src/reduction.o \
 		src/sha256.o
 DIST          = ../../../Qt5.14.2/5.14.2/clang_64/mkspecs/features/spec_pre.prf \
 		../../../Qt5.14.2/5.14.2/clang_64/mkspecs/qdevice.pri \
@@ -276,7 +274,6 @@ DIST          = ../../../Qt5.14.2/5.14.2/clang_64/mkspecs/features/spec_pre.prf 
 		src/main.cpp \
 		src/rainbowAttack.cpp \
 		src/rainbowTableGen.cpp \
-		src/reduction.cpp \
 		src/sha256.cpp
 QMAKE_TARGET  = RainbowAttack
 DESTDIR       = build/
@@ -776,10 +773,6 @@ src/rainbowTableGen.o: src/rainbowTableGen.cpp src/headers/rainbowTableGen.hpp \
 		src/headers/passwd-utils.hpp \
 		src/headers/random.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/rainbowTableGen.o src/rainbowTableGen.cpp
-
-src/reduction.o: src/reduction.cpp src/headers/reduction.hpp \
-		src/headers/func-utils.hpp
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/reduction.o src/reduction.cpp
 
 src/sha256.o: src/sha256.cpp src/headers/sha256.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/sha256.o src/sha256.cpp

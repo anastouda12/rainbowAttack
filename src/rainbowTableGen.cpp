@@ -3,8 +3,8 @@
 #include <string.h>
 #include "src/headers/sha256.h"
 #include "src/headers/reduction.hpp"
-#include "src/headers/passwd-utils.hpp"
 #include "src/headers/func-utils.hpp"
+#include "src/headers/passwd-utils.hpp"
 #include <chrono>
 
 using namespace std::chrono;
@@ -42,7 +42,7 @@ void RainbowTableGen::generateTable()
         counterEnregistrement++;
         precomputed = buildPrecomputedHashChain();
         insertToPrecomputedOrdered(precomputed);
-        currentSize += precomputed.first.size() + std::string(" ").size() + precomputed.second.size();
+        currentSize += precomputed.first.length() + precomputed.second.length() + 1;
         std::cout  << std::fixed << std::setprecision(5) << std::setw(17);
         std::cout << (double) ((double) currentSize / (double) sizeTableOnByte)*100 << "% \r";
         std::cout.flush();
@@ -79,7 +79,7 @@ std::string RainbowTableGen::calculTail(std::string password) const
 std::pair<std::string,std::string> RainbowTableGen::buildPrecomputedHashChain() const
 {
     std::pair<std::string, std::string> headTailsChain;
-    std::string password = generate_passwd(random(MINIMAL_PASSWORD_LENGTH,MAXIMAL_PASSWORD_LENGTH));
+    std::string password = generate_passwd(random(MAXIMAL_PASSWORD_LENGTH,MAXIMAL_PASSWORD_LENGTH));
     std::string tail = calculTail(password);
     headTailsChain.first = password;
     headTailsChain.second = tail;
@@ -115,7 +115,7 @@ void RainbowTableGen::loadFromFile(const std::string &fileName)
             in >> hash;
         }
     }else{
-        std::cerr << "[ERROR] : Could not read from file \"" << fileName << "\"." << std::endl;
+        std::cerr << "[ERROR] : rainbowTable not found  : \"" << fileName << "\"." << std::endl;
     }
     // we get the size of file
     in.close();

@@ -6,19 +6,19 @@
 
 namespace rainbow {
 
-RainbowAttack::RainbowAttack(RainbowTableGen & table, std::string pathPasswordsToCrack): rainbowTable_{table}, passHashToCrack_{}
+RainbowAttack::RainbowAttack(RainbowTableGen & table, std::string pathPasswordsToCrack): rainbowTable_{table}, LoginAndHashToCrack_{}
 {
     initPasswordsToCrack(pathPasswordsToCrack);
 }
 
 // source : Binary search inspired by https://www.geeksforgeeks.org/
-std::optional<std::pair<std::string,std::string>> RainbowAttack::pwdBinarySearch(const std::string & hash) const
+std::optional<std::pair<std::string,std::string>> RainbowAttack::pwdBinarySearch(const std::string & pwd) const
 {
     std::vector<std::pair<std::string, std::string>> table = rainbowTable_.getTablePrecomputed();
     std::optional<std::pair<std::string,std::string>> headTail;
     int min = 0, max = table.size() - 1, mid = (min + max) / 2, comp;
         while (min <= max) {
-            comp = hash.compare(table[mid].second);
+            comp = pwd.compare(table[mid].second);
             if (comp == 0) {
                 headTail.emplace(table[mid]);
                 return headTail;
@@ -35,36 +35,28 @@ std::optional<std::pair<std::string,std::string>> RainbowAttack::pwdBinarySearch
 std::optional<std::string> RainbowAttack::crackPassword(const std::string & hash) const
 {
 
-    Reduction reduction(hash.size(),ALPHABET);
+    Reduction reduction(8,ALPHABET);
     std::optional<std::string> password;
     std::string head;
     std::string previous;
     std::string current = head;
-    bool foundPassword = false;
-    unsigned step =0;
-    unsigned nbFailuresToFindHead = 0;
-    std::optional<std::pair<std::string,std::string>> headTail = pwdBinarySearch(hash);
-    while (nbFailuresToFindHead < 10 && step <= 50000 && !foundPassword) {
-        if(headTail.has_value()){ // tail found ==> head found
-            head = headTail->first;
-            current = head;
-            previous = current;
+    unsigned step =HASH_LEN-1; // last function reduction used
+    unsigned nbFailures =0;
+    std::cout << hash << std::endl;
+    current = reduction.reduce(hash,step);
+    std::optional<std::pair<std::string,std::string>> headTail = pwdBinarySearch(current);
+    nbFailures++;
+    while(!headTail.has_value() && nbFailures < HASH_LEN){
+        current = sha256(hash);
+        for(unsigned i = 0; i <= nbFailures; i++){
+            current = reduction.reduce(current,(HASH_LEN-1)-i); // HASH_LEN - 1 its the last reduction used
             current = sha256(current);
-            if(pwdBinarySearch(current).has_value()){
-               foundPassword = true;
-               password.emplace(previous);
-               return password;
-            }else{
-               current = reduction.reduce(current,step);
-               step++;
-            }
-        }else{ // No tail found in table for find the head
-            nbFailuresToFindHead++;
-            current = reduction.reduce(hash,step);
-            current = sha256(hash);
-            headTail = pwdBinarySearch(hash);
         }
+        headTail = pwdBinarySearch(current);
+        nbFailures++;
+        std::cout << nbFailures << std::endl;
     }
+    if(headTail.has_value()) password = "ok";
     return password;
 }
 
@@ -74,14 +66,32 @@ void RainbowAttack::initPasswordsToCrack(const std::string file)
     std::ifstream in(file);
     if(in.fail())
     {
-        std::cerr << "[ERROR]: " << "cannot open the file : " << file << std::endl;
+        std::cerr << "[ERROR] : " << "cannot open the file : " << file << std::endl;
         std::exit(-3);
     }
-    std::string hash;
-    while(std::getline(in, hash))
-    {
-        this->passHashToCrack_.push_back(hash);
+    // Read the login, hash pairs.
+    std::string login, hash;
+    in >> login;
+    in >> hash;
+    while(in) { // While file contains rows, read and insert in the vector
+        this->LoginAndHashToCrack_.push_back(make_pair(login,hash));
+        in >> login;
+        in >> hash;
     }
+   in.close();
+}
+
+void RainbowAttack::attack()
+{
+
+    crackPassword(this->LoginAndHashToCrack_.at(0).second);
+   // for(auto e : this->LoginAndHashToCrack_){
+   //     std::cout << crackPassword(e.second).has_value() << std::endl;
+    //}
+}
+
+RainbowAttack::~RainbowAttack(){
+    this->LoginAndHashToCrack_.clear();
 }
 
 

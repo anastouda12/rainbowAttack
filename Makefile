@@ -52,16 +52,16 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = src/func-utils.cpp \
-		src/main.cpp \
+SOURCES       = src/main.cpp \
 		src/rainbowAttack.cpp \
 		src/rainbowTableGen.cpp \
-		src/sha256.cpp 
-OBJECTS       = src/func-utils.o \
-		src/main.o \
+		src/sha256.cpp \
+		src/utils.cpp 
+OBJECTS       = src/main.o \
 		src/rainbowAttack.o \
 		src/rainbowTableGen.o \
-		src/sha256.o
+		src/sha256.o \
+		src/utils.o
 DIST          = ../../../Qt5.14.2/5.14.2/clang_64/mkspecs/features/spec_pre.prf \
 		../../../Qt5.14.2/5.14.2/clang_64/mkspecs/qdevice.pri \
 		../../../Qt5.14.2/5.14.2/clang_64/mkspecs/features/device_config.prf \
@@ -264,17 +264,17 @@ DIST          = ../../../Qt5.14.2/5.14.2/clang_64/mkspecs/features/spec_pre.prf 
 		../../../Qt5.14.2/5.14.2/clang_64/mkspecs/features/exceptions.prf \
 		../../../Qt5.14.2/5.14.2/clang_64/mkspecs/features/yacc.prf \
 		../../../Qt5.14.2/5.14.2/clang_64/mkspecs/features/lex.prf \
-		RainbowAttack.pro src/headers/func-utils.hpp \
-		src/headers/passwd-utils.hpp \
+		RainbowAttack.pro src/headers/passwd-utils.hpp \
 		src/headers/rainbowAttack.hpp \
 		src/headers/rainbowTableGen.hpp \
 		src/headers/random.hpp \
 		src/headers/reduction.hpp \
-		src/headers/sha256.h src/func-utils.cpp \
-		src/main.cpp \
+		src/headers/sha256.h \
+		src/headers/utils.hpp src/main.cpp \
 		src/rainbowAttack.cpp \
 		src/rainbowTableGen.cpp \
-		src/sha256.cpp
+		src/sha256.cpp \
+		src/utils.cpp
 QMAKE_TARGET  = RainbowAttack
 DESTDIR       = build/
 TARGET        = build/RainbowAttack
@@ -752,30 +752,32 @@ compiler_clean:
 
 ####### Compile
 
-src/func-utils.o: src/func-utils.cpp src/headers/func-utils.hpp
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/func-utils.o src/func-utils.cpp
-
 src/main.o: src/main.cpp src/headers/rainbowTableGen.hpp \
+		src/headers/reduction.hpp \
+		src/headers/utils.hpp \
 		src/headers/rainbowAttack.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/main.o src/main.cpp
 
 src/rainbowAttack.o: src/rainbowAttack.cpp src/headers/rainbowAttack.hpp \
 		src/headers/rainbowTableGen.hpp \
 		src/headers/reduction.hpp \
-		src/headers/func-utils.hpp \
+		src/headers/utils.hpp \
 		src/headers/sha256.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/rainbowAttack.o src/rainbowAttack.cpp
 
 src/rainbowTableGen.o: src/rainbowTableGen.cpp src/headers/rainbowTableGen.hpp \
-		src/headers/sha256.h \
 		src/headers/reduction.hpp \
-		src/headers/func-utils.hpp \
+		src/headers/utils.hpp \
+		src/headers/sha256.h \
 		src/headers/passwd-utils.hpp \
 		src/headers/random.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/rainbowTableGen.o src/rainbowTableGen.cpp
 
 src/sha256.o: src/sha256.cpp src/headers/sha256.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/sha256.o src/sha256.cpp
+
+src/utils.o: src/utils.cpp src/headers/utils.hpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o src/utils.o src/utils.cpp
 
 ####### Install
 

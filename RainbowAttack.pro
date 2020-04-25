@@ -9,19 +9,19 @@ TARGET = RainbowAttack
 
 QMAKE_CXXFLAGS += -std=c++17
 SOURCES += \
-        src/func-utils.cpp \
         src/main.cpp \
         src/rainbowAttack.cpp \
         src/rainbowTableGen.cpp \
-        src/sha256.cpp
+        src/sha256.cpp \
+        src/utils.cpp
 
 DESTDIR = $$PWD/build
 
 HEADERS += \
-    src/headers/func-utils.hpp \
     src/headers/passwd-utils.hpp \
     src/headers/rainbowAttack.hpp \
     src/headers/rainbowTableGen.hpp \
     src/headers/random.hpp \
     src/headers/reduction.hpp \
-    src/headers/sha256.h
+    src/headers/sha256.h \
+    src/headers/utils.hpp

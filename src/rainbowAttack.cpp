@@ -4,59 +4,76 @@
 #include <iostream>
 
 
-namespace rainbow {
+namespace rainbow
+{
 
-RainbowAttack::RainbowAttack(RainbowTableGen & table, std::string pathPasswordsToCrack): rainbowTable_{table}, LoginAndHashToCrack_{}
+RainbowAttack::RainbowAttack(RainbowTableGen & table,
+                             std::string pathPasswordsToCrack): rainbowTable_{table},
+    LoginAndHashToCrack_{}
 {
     initPasswordsToCrack(pathPasswordsToCrack);
 }
 
 // source : Binary search inspired by https://www.geeksforgeeks.org/
-std::optional<std::pair<std::string,std::string>> RainbowAttack::pwdBinarySearch(const std::string & pwd) const
+std::optional<std::pair<std::string, std::string>>
+        RainbowAttack::pwdBinarySearch(std::string & pwd) const
 {
-    std::vector<std::pair<std::string, std::string>> table = rainbowTable_.getTablePrecomputed();
-    std::optional<std::pair<std::string,std::string>> headTail;
+    std::vector<std::pair<std::string, std::string>> table;
+    std::optional<std::pair<std::string, std::string>> headTail;
     int min = 0, max = table.size() - 1, mid = (min + max) / 2, comp;
-        while (min <= max) {
-            comp = pwd.compare(table[mid].second);
-            if (comp == 0) {
-                headTail.emplace(table[mid]);
-                return headTail;
-            }else if(comp < 0){
-                max = mid - 1;
-            }else{
-                min = mid + 1;
-            }
-            mid = (min + max) / 2;
+    while (min <= max)
+    {
+        comp = pwd.compare(table[mid].second);
+        if (comp == 0)
+        {
+            headTail.emplace(table[mid]);
+            return headTail;
         }
-        return headTail;
+        else if (comp < 0)
+        {
+            max = mid - 1;
+        }
+        else
+        {
+            min = mid + 1;
+        }
+        mid = (min + max) / 2;
+    }
+    return headTail;
 }
 
-std::optional<std::string> RainbowAttack::crackPassword(const std::string & hash) const
+std::optional<std::string> RainbowAttack::crackPassword(
+    std::string & hash) const
 {
 
-    Reduction reduction(8,ALPHABET);
+    Reduction reduction(MAXIMAL_PASSWORD_LENGTH);
     std::optional<std::string> password;
     std::string head;
     std::string previous;
     std::string current = head;
-    unsigned step =HASH_LEN-1; // last function reduction used
-    unsigned nbFailures =0;
-    std::cout << hash << std::endl;
-    current = reduction.reduce(hash,step);
-    std::optional<std::pair<std::string,std::string>> headTail = pwdBinarySearch(current);
+    unsigned step = HASH_LEN - 1; // last function reduction used
+    unsigned nbFailures = 0;
+    current = *reduction.reduce(hash, step);
+    std::optional<std::pair<std::string, std::string>> headTail =
+                pwdBinarySearch(current);
     nbFailures++;
-    while(!headTail.has_value() && nbFailures < HASH_LEN){
+    while (!headTail.has_value() && nbFailures < HASH_LEN)
+    {
         current = sha256(hash);
-        for(unsigned i = 0; i <= nbFailures; i++){
-            current = reduction.reduce(current,(HASH_LEN-1)-i); // HASH_LEN - 1 its the last reduction used
+        for (unsigned i = nbFailures; i > 0; i--)
+        {
+            current = *reduction.reduce(current,
+                                        (HASH_LEN - 1) - i); // HASH_LEN - 1 its the last reduction used
             current = sha256(current);
         }
         headTail = pwdBinarySearch(current);
         nbFailures++;
-        std::cout << nbFailures << std::endl;
+        std::cout  << std::fixed << std::setprecision(5) << std::setw(17);
+        std::cout << (double) ((double) nbFailures / (double)(
+                                   HASH_LEN - 1.0)) * 100 << "% \r";
+        std::cout.flush();
     }
-    if(headTail.has_value()) password = "ok";
+    if (headTail.has_value()) password = "ok";
     return password;
 }
 
@@ -64,33 +81,36 @@ std::optional<std::string> RainbowAttack::crackPassword(const std::string & hash
 void RainbowAttack::initPasswordsToCrack(const std::string file)
 {
     std::ifstream in(file);
-    if(in.fail())
+    if (in.fail())
     {
-        std::cerr << "[ERROR] : " << "cannot open the file : " << file << std::endl;
+        std::cerr << "[ERROR] : " << "cannot open the file : " << file <<
+                  std::endl;
         std::exit(-3);
     }
     // Read the login, hash pairs.
     std::string login, hash;
     in >> login;
     in >> hash;
-    while(in) { // While file contains rows, read and insert in the vector
-        this->LoginAndHashToCrack_.push_back(make_pair(login,hash));
+    while (in)  // While file contains rows, read and insert in the vector
+    {
+        this->LoginAndHashToCrack_.push_back(make_pair(login, hash));
         in >> login;
         in >> hash;
     }
-   in.close();
+    in.close();
 }
 
 void RainbowAttack::attack()
 {
 
     crackPassword(this->LoginAndHashToCrack_.at(0).second);
-   // for(auto e : this->LoginAndHashToCrack_){
-   //     std::cout << crackPassword(e.second).has_value() << std::endl;
+    // for(auto e : this->LoginAndHashToCrack_){
+    //     std::cout << crackPassword(e.second).has_value() << std::endl;
     //}
 }
 
-RainbowAttack::~RainbowAttack(){
+RainbowAttack::~RainbowAttack()
+{
     this->LoginAndHashToCrack_.clear();
 }
 

@@ -3,13 +3,10 @@
 
 #define SHA256_SIZE_BYTE 32
 
-#include <vector>
-#include <stdio.h>
-#include <string>
-#include <math.h>
-#include "func-utils.hpp"
+#include "utils.hpp"
 
-namespace rainbow {
+namespace rainbow
+{
 
 class Reduction
 {
@@ -17,47 +14,27 @@ class Reduction
     unsigned passwordLength_;
     std::string alphabet_;
 
-public:
-    Reduction(unsigned passLength, std::string alphabet):
-        passwordLength_{passLength}, alphabet_{alphabet}
+  public:
+
+    Reduction(unsigned passLength):
+        passwordLength_{passLength}
     {}
 
-    inline std::string reduce(const std::string hash,unsigned column)
-   {
-
-       std::string reduction;
-       unsigned char bytes[SHA256_SIZE_BYTE];
-       int current;
-       hexConvert(hash.c_str(),bytes);
-
-       for(unsigned i =0;i< this->passwordLength_;i++)
-       {
-           current = bytes[(i + column) % SHA256_SIZE_BYTE];
-           reduction += this->alphabet_[current % this->alphabet_.size()];
-       }
-       return reduction;
-   }
-
-    inline unsigned getPasswordLength()
+    inline std::string * reduce(std::string & hash,
+                                unsigned column) const
     {
-        return this->passwordLength_;
-    }
+        static std::string reduction(this->passwordLength_, ' ');
+        unsigned char bytes[SHA256_SIZE_BYTE];
+        int current;
+        hexConvert(hash.c_str(), bytes);
 
-    inline std::string getAlphabet()
-    {
-        return this->alphabet_;
+        for (unsigned i = 0; i < this->passwordLength_; i++)
+        {
+            current = bytes[(i + column) % SHA256_SIZE_BYTE];
+            reduction[i] = ALPHABET[current % ALPHABET_SIZE];
+        }
+        return &reduction;
     }
-
-    inline void setPasswordLength(unsigned int length)
-    {
-        this->passwordLength_ = length;
-    }
-
-   inline void setAlphabet(std::string alphabet)
-    {
-        this->alphabet_ = alphabet;
-    }
-
 };
 
 } // end namespace rainbow

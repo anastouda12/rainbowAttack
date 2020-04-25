@@ -6,26 +6,31 @@
 #include "rainbowTableGen.hpp"
 
 
-namespace rainbow {
+namespace rainbow
+{
 
-class RainbowAttack{
+class RainbowAttack
+{
 
-private:
+  private:
 
     RainbowTableGen & rainbowTable_;
-    std::vector<std::pair<std::string,std::string>> LoginAndHashToCrack_;
+    std::vector<std::pair<std::string, std::string>> LoginAndHashToCrack_;
 
 
 
-    std::optional<std::string> crackPassword(const std::string & hash) const;
-    std::optional<std::pair<std::string,std::string>> pwdBinarySearch(const std::string & pwd) const;
+    std::optional<std::string> crackPassword(std::string & hash)
+    const;
+    std::optional<std::pair<std::string, std::string>> pwdBinarySearch(
+                std::string & pwd) const;
     void initPasswordsToCrack(const std::string file);
 
 
-public:
+  public:
 
 
-    RainbowAttack(RainbowTableGen & table, std::string pathPasswordsToCrack);
+    RainbowAttack(RainbowTableGen & table,
+                  std::string pathPasswordsToCrack);
     ~RainbowAttack();
 
     void attack();

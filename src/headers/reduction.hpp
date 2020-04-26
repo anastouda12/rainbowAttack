@@ -2,6 +2,7 @@
 #define REDUCTION_H
 
 #define SHA256_SIZE_BYTE 32
+#define SHA256_LENGTH 64
 
 #include "utils.hpp"
 

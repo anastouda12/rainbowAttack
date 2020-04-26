@@ -1,17 +1,41 @@
 #include "src/headers/rainbowAttack.hpp"
 #include "src/headers/reduction.hpp"
 #include "src/headers/sha256.h"
+#include "src/headers/utils.hpp"
 #include <iostream>
 
 
 namespace rainbow
 {
 
-RainbowAttack::RainbowAttack(RainbowTableGen & table,
-                             std::string pathPasswordsToCrack): rainbowTable_{table},
-    LoginAndHashToCrack_{}
+RainbowAttack::RainbowAttack(std::string & hashToCrackFilePath):
+    rainbowTableFile_{},
+    LoginAndHashToCrack_{},
+    passwordCracked_{}
 {
-    initPasswordsToCrack(pathPasswordsToCrack);
+    getHashesToCrack(hashToCrackFilePath);
+}
+
+void RainbowAttack::getHashesToCrack(const std::string & filepath)
+{
+    std::ifstream in(filepath);
+    if (in.fail())
+    {
+        std::cerr << "[ERROR] : " << "cannot open the file : " << filepath <<
+                  std::endl;
+        std::exit(-3);
+    }
+    // Read the login, hash pairs.
+    std::string login, hash(SHA256_LENGTH, ' ');
+    in >> login;
+    in >> hash;
+    while (in)  // While file contains rows, read and insert in the vector
+    {
+        this->LoginAndHashToCrack_.push_back(make_pair(login, hash));
+        in >> login;
+        in >> hash;
+    }
+    in.close();
 }
 
 // source : Binary search inspired by https://www.geeksforgeeks.org/
@@ -78,30 +102,27 @@ std::optional<std::string> RainbowAttack::crackPassword(
 }
 
 
-void RainbowAttack::initPasswordsToCrack(const std::string file)
+void RainbowAttack::attack()
 {
-    std::ifstream in(file);
-    if (in.fail())
+    rainbowTableFile_.open(FILE_NAME_RTABLE, std::ios::binary);
+    if (rainbowTableFile_.fail())
     {
-        std::cerr << "[ERROR] : " << "cannot open the file : " << file <<
+        std::cerr << "[ERROR] : " << "cannot open the file : " <<
+                  FILE_NAME_RTABLE <<
                   std::endl;
         std::exit(-3);
     }
-    // Read the login, hash pairs.
-    std::string login, hash;
-    in >> login;
-    in >> hash;
-    while (in)  // While file contains rows, read and insert in the vector
+    rainbowTableFile_.seekg(0, std::ios::end);
+    if (rainbowTableFile_.tellg() == 0)
     {
-        this->LoginAndHashToCrack_.push_back(make_pair(login, hash));
-        in >> login;
-        in >> hash;
+        std::cerr << "[ERROR] : " << "RainbowTable : " <<
+                  FILE_NAME_RTABLE << " is empty, you need to generate the table first."
+                  <<
+                  std::endl;
+        std::exit(-3);
     }
-    in.close();
-}
-
-void RainbowAttack::attack()
-{
+    rainbowTableFile_.clear();
+    rainbowTableFile_.seekg(0, std::ios::beg);
 
     crackPassword(this->LoginAndHashToCrack_.at(0).second);
     // for(auto e : this->LoginAndHashToCrack_){

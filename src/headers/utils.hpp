@@ -14,7 +14,8 @@ constexpr const char * ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                   "abcdefghijklmnopqrstuvwxyz"
                                   "0123456789";
 
-constexpr const char * FILE_NAME = "RainbowTable.txt";
+constexpr const char * FILE_NAME_RTABLE = "RainbowTable.txt";
+constexpr const char * PASSWORD_CRACKED_FILE = "PasswordsCracked.txt";
 
 constexpr const int ALPHABET_SIZE = 62;
 

@@ -14,8 +14,20 @@ class RainbowAttack
 
   private:
 
-    RainbowTableGen & rainbowTable_;
+    /**
+     * @brief File containing the rainbow table.
+     */
+    std::ifstream rainbowTableFile_;
+
+    /**
+     * @brief LoginAndHashToCrack_ All pair login-hash to crack inside 'HashToCrackFile' given.
+     */
     std::vector<std::pair<std::string, std::string>> LoginAndHashToCrack_;
+
+    /**
+     * @brief passwordCracked_ File containing the passwords cracked
+     */
+    std::ofstream passwordCracked_;
 
 
 
@@ -23,14 +35,13 @@ class RainbowAttack
     const;
     std::optional<std::pair<std::string, std::string>> pwdBinarySearch(
                 std::string & pwd) const;
-    void initPasswordsToCrack(const std::string file);
+    void getHashesToCrack(const std::string & filepath);
 
 
   public:
 
 
-    RainbowAttack(RainbowTableGen & table,
-                  std::string pathPasswordsToCrack);
+    RainbowAttack(std::string & hashToCrackFile);
     ~RainbowAttack();
 
     void attack();

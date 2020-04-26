@@ -41,7 +41,7 @@ static void printEndGenerator(std::chrono::milliseconds
     std::cout << "\r" << std::flush;
     std::cout << "100%... Loading finish !" << std::endl;
     std::cout <<
-              "[LOCATION] : RainbowTable was generated on file 'Build/" << FILE_NAME
+              "[LOCATION] : RainbowTable was generated on file 'Build/" << FILE_NAME_RTABLE
               << "'"
               << std::endl;
     std::cout << "[DURATION] : Generated on " << std::fixed <<
@@ -55,7 +55,7 @@ static void printEndGenerator(std::chrono::milliseconds
 
 void RainbowTableGen::generateTable()
 {
-    rainbowTableFile_.open(FILE_NAME,
+    rainbowTableFile_.open(FILE_NAME_RTABLE,
                            std::ios::out | std::ios::binary | std::ios::trunc);
     if (this->rainbowTableFile_.is_open())
     {
@@ -85,7 +85,7 @@ void RainbowTableGen::generateTable()
     }
     else
     {
-        std::cerr << "[ERROR] : Opening file " << FILE_NAME << " failed" <<
+        std::cerr << "[ERROR] : Opening file " << FILE_NAME_RTABLE << " failed" <<
                   std::endl;
     }
 }

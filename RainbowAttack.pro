@@ -18,10 +18,10 @@ SOURCES += \
 DESTDIR = $$PWD/build
 
 HEADERS += \
-    src/headers/passwd-utils.hpp \
-    src/headers/rainbowAttack.hpp \
-    src/headers/rainbowTableGen.hpp \
-    src/headers/random.hpp \
-    src/headers/reduction.hpp \
-    src/headers/sha256.h \
-    src/headers/utils.hpp
+    src/passwd-utils.hpp \
+    src/rainbowAttack.hpp \
+    src/rainbowTableGen.hpp \
+    src/random.hpp \
+    src/reduction.hpp \
+    src/sha256.h \
+    src/utils.hpp

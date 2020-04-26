@@ -1,5 +1,5 @@
-#include "src/headers/rainbowTableGen.hpp"
-#include "src/headers/rainbowAttack.hpp"
+#include "src/rainbowTableGen.hpp"
+#include "src/rainbowAttack.hpp"
 
 using namespace std;
 using namespace rainbow;

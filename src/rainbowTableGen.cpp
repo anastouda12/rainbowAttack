@@ -1,8 +1,7 @@
-#include "src/headers/rainbowTableGen.hpp"
-#include "src/headers/sha256.h"
-#include "src/headers/reduction.hpp"
-#include "src/headers/utils.hpp"
-#include "src/headers/passwd-utils.hpp"
+#include "src/rainbowTableGen.hpp"
+#include "src/sha256.h"
+#include "src/utils.hpp"
+#include "src/passwd-utils.hpp"
 
 using namespace std::chrono;
 namespace rainbow
@@ -41,7 +40,8 @@ static void printEndGenerator(std::chrono::milliseconds
     std::cout << "\r" << std::flush;
     std::cout << "100%... Loading finish !" << std::endl;
     std::cout <<
-              "[LOCATION] : RainbowTable was generated on file 'Build/" << FILE_NAME_RTABLE
+              "[LOCATION] : RainbowTable was generated on file 'Build/" <<
+              FILE_NAME_RTABLE
               << "'"
               << std::endl;
     std::cout << "[DURATION] : Generated on " << std::fixed <<
@@ -85,7 +85,8 @@ void RainbowTableGen::generateTable()
     }
     else
     {
-        std::cerr << "[ERROR] : Opening file " << FILE_NAME_RTABLE << " failed" <<
+        std::cerr << "[ERROR] : Opening file " << FILE_NAME_RTABLE <<
+                  " failed" <<
                   std::endl;
     }
 }

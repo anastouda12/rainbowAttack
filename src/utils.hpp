@@ -17,7 +17,7 @@ constexpr const char * ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 constexpr const char * FILE_NAME_RTABLE = "RainbowTable.txt";
 constexpr const char * PASSWORD_CRACKED_FILE = "PasswordsCracked.txt";
 
-constexpr const int ALPHABET_SIZE = 62;
+constexpr int ALPHABET_SIZE = 62;
 
 inline void hexConvert(const char * text, unsigned char * bytes)
 {

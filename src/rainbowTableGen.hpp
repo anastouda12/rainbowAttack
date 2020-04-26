@@ -10,7 +10,7 @@
 #include <fstream>
 #include <utility>
 #include <vector>
-#include "src/headers/reduction.hpp"
+#include "src/reduction.hpp"
 
 
 namespace rainbow

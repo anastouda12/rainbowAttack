@@ -1,7 +1,7 @@
-#include "src/headers/rainbowAttack.hpp"
-#include "src/headers/reduction.hpp"
-#include "src/headers/sha256.h"
-#include "src/headers/utils.hpp"
+#include "src/rainbowAttack.hpp"
+#include "src/reduction.hpp"
+#include "src/sha256.h"
+#include "src/utils.hpp"
 #include <iostream>
 
 

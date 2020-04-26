@@ -19,6 +19,11 @@ constexpr const char * PASSWORD_CRACKED_FILE = "PasswordsCracked.txt";
 
 constexpr int ALPHABET_SIZE = 62;
 
+/**
+ * @brief hexConvert Hexa convert utils
+ * @param text
+ * @param bytes
+ */
 inline void hexConvert(const char * text, unsigned char * bytes)
 {
     unsigned int temp;

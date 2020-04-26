@@ -12,15 +12,32 @@ namespace rainbow
 class Reduction
 {
 
+    /**
+     * @brief passwordLength_ pwd length
+     */
     unsigned passwordLength_;
+
+    /**
+     * @brief alphabet_ Alphabet
+     */
     std::string alphabet_;
 
   public:
 
+    /**
+     * @brief Reduction Constructor
+     * @param passLength pass length
+     */
     Reduction(unsigned passLength):
         passwordLength_{passLength}
     {}
 
+    /**
+     * @brief reduce Reduction function to given a reduce with a hash and step into the table
+     * @param hash hash to reduce
+     * @param column the column (step) of the reduction in the table
+     * @return reduction of the hash given
+     */
     inline std::string * reduce(std::string & hash,
                                 unsigned column) const
     {

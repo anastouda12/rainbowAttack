@@ -25,9 +25,8 @@ static void rainbowTableGenerate(float size)
 
 static void rainbowAttack(std::string pwdPath)
 {
-    // rainbow::RainbowTableGen gen;
-    //rainbow::RainbowAttack att(gen,pwdPath);
-    //  att.attack();
+    rainbow::RainbowAttack att(pwdPath);
+    att.attack();
 }
 
 static int commandManager(int argc, char ** argv)

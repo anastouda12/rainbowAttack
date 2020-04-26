@@ -29,7 +29,7 @@ void RainbowAttack::getHashesToCrack(const std::string & filepath)
     std::string login, hash(SHA256_LENGTH, ' ');
     in >> login;
     in >> hash;
-    while (in)  // While file contains rows, read and insert in the vector
+    while (in)
     {
         this->LoginAndHashToCrack_.push_back(make_pair(login, hash));
         in >> login;
@@ -38,50 +38,59 @@ void RainbowAttack::getHashesToCrack(const std::string & filepath)
     in.close();
 }
 
-// source : Binary search inspired by https://www.geeksforgeeks.org/
-std::optional<std::pair<std::string, std::string>>
-        RainbowAttack::pwdBinarySearch(std::string & pwd) const
+RainbowTableGen::rtChain
+RainbowAttack::pwdBinarySearch(std::string & reduc)
 {
-    std::vector<std::pair<std::string, std::string>> table;
-    std::optional<std::pair<std::string, std::string>> headTail;
-    int min = 0, max = table.size() - 1, mid = (min + max) / 2, comp;
-    while (min <= max)
+    RainbowTableGen::rtChain chain;
+    if (rainbowTableFile_.is_open())
     {
-        comp = pwd.compare(table[mid].second);
-        if (comp == 0)
+        rainbowTableFile_.clear();
+        long min = rainbowTableFile_.seekg(0,
+                                           std::ios::beg).tellg() / RTCHAIN_SIZE;
+        long max = rainbowTableFile_.seekg(0,
+                                           std::ios::end).tellg() / RTCHAIN_SIZE;
+        long mid = (min + max) / 2;
+        int comp;
+        rainbowTableFile_.clear();
+        rainbowTableFile_.seekg(0, std::ios::beg);
+        while (min <= max)
         {
-            headTail.emplace(table[mid]);
-            return headTail;
+            rainbowTableFile_.seekg(mid * RTCHAIN_SIZE);
+            rainbowTableFile_.read((char *) &chain, RTCHAIN_SIZE);
+            comp = reduc.compare(chain.tail);
+            if (comp == 0)
+            {
+                return chain;
+            }
+            else if (comp < 0)
+            {
+                max = mid - 1;
+            }
+            else
+            {
+                min = mid + 1;
+            }
+            mid = (min + max) / 2;
         }
-        else if (comp < 0)
-        {
-            max = mid - 1;
-        }
-        else
-        {
-            min = mid + 1;
-        }
-        mid = (min + max) / 2;
     }
-    return headTail;
+    return chain;
 }
 
-std::optional<std::string> RainbowAttack::crackPassword(
-    std::string & hash) const
+std::string RainbowAttack::crackPassword(
+    std::string & hash)
 {
 
     Reduction reduction(MAXIMAL_PASSWORD_LENGTH);
-    std::optional<std::string> password;
-    std::string head;
-    std::string previous;
+    std::string password(MAXIMAL_PASSWORD_LENGTH, ' ');
+    std::string head(MAXIMAL_PASSWORD_LENGTH, ' ');
+    std::string previous(MAXIMAL_PASSWORD_LENGTH, ' ');
     std::string current = head;
     unsigned step = HASH_LEN - 1; // last function reduction used
     unsigned nbFailures = 0;
     current = *reduction.reduce(hash, step);
-    std::optional<std::pair<std::string, std::string>> headTail =
-                pwdBinarySearch(current);
+    RainbowTableGen::rtChain headTail = pwdBinarySearch(current);
     nbFailures++;
-    while (!headTail.has_value() && nbFailures < HASH_LEN)
+    while (headTail.head[0] == '\0' && nbFailures < HASH_LEN)
     {
         current = sha256(hash);
         for (unsigned i = nbFailures; i > 0; i--)
@@ -92,12 +101,32 @@ std::optional<std::string> RainbowAttack::crackPassword(
         }
         headTail = pwdBinarySearch(current);
         nbFailures++;
-        std::cout  << std::fixed << std::setprecision(5) << std::setw(17);
-        std::cout << (double) ((double) nbFailures / (double)(
-                                   HASH_LEN - 1.0)) * 100 << "% \r";
-        std::cout.flush();
     }
-    if (headTail.has_value()) password = "ok";
+
+    if (headTail.head[0] != '\0') // head found ==> chain found
+    {
+        current = headTail.head[0];
+        previous = current;
+        bool found = false;
+        int column = 0;
+        while (!found &&
+                current !=
+                headTail.tail) // while we dont reach the tail of the chains
+        {
+            current = sha256(current);
+            if (current == hash) // Hash of the password found
+            {
+                found = true; // The previous reduce = password
+                password = previous;
+            }
+            else
+            {
+                current = *reduction.reduce(current, column);
+                previous = current;
+                column++;
+            }
+        }
+    }
     return password;
 }
 
@@ -123,11 +152,15 @@ void RainbowAttack::attack()
     }
     rainbowTableFile_.clear();
     rainbowTableFile_.seekg(0, std::ios::beg);
-
-    crackPassword(this->LoginAndHashToCrack_.at(0).second);
-    // for(auto e : this->LoginAndHashToCrack_){
-    //     std::cout << crackPassword(e.second).has_value() << std::endl;
-    //}
+    passwordCracked_.open("passCracked.txt", std::ios::binary);
+    for ( std::pair<std::string, std::string> lh :
+            this->LoginAndHashToCrack_)
+    {
+        passwordCracked_ << lh.first << ":" << crackPassword(lh.second) <<
+                         std::endl; // Second = Hash  First = Login
+    }
+    rainbowTableFile_.close();
+    passwordCracked_.close();
 }
 
 RainbowAttack::~RainbowAttack()

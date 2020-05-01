@@ -18,7 +18,7 @@ static void help()
 
 static void rainbowTableGenerate(float size)
 {
-    rainbow::RainbowTableGen gen(size, 8);
+    rainbow::RainbowTableGen gen(size);
     gen.generateTable();
 
 }

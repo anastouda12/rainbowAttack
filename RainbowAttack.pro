@@ -12,8 +12,7 @@ SOURCES += \
         src/main.cpp \
         src/rainbowAttack.cpp \
         src/rainbowTableGen.cpp \
-        src/sha256.cpp \
-        src/utils.cpp
+        src/sha256.cpp
 
 DESTDIR = $$PWD/build
 
@@ -24,4 +23,6 @@ HEADERS += \
     src/random.hpp \
     src/reduction.hpp \
     src/sha256.h \
+    src/threadpool.hpp \
+    src/threadroutine.hpp \
     src/utils.hpp

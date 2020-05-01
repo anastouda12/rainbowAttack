@@ -2,8 +2,8 @@
 #define RAINBOWATTACK_HPP
 
 #include <fstream>
-#include <optional>
-#include "rainbowTableGen.hpp"
+#include <vector>
+#include "src/utils.hpp"
 
 
 namespace rainbow
@@ -43,7 +43,7 @@ class RainbowAttack
      * @param tail the reduction given to checks in the rainbowtable
      * @return the chain who has the reduction in the assembly of the chain, if not empty string
      */
-    RainbowTableGen::rtChain pwdBinarySearch(
+    RTChain pwdBinarySearch(
         std::string & reduction);
 
     /**

@@ -11,7 +11,7 @@ build/rainbowTable : build/rainbowTableGen.o build/rainbowAttack.o build/main.o
 build/main.o : src/main.cpp
 	${CC} ${CFLAGS} src/main.cpp -c -o build/main.o
 
-build/rainbowTableGen.o : src/rainbowTableGen.cpp src/rainbowTableGen.hpp build/sha256.o
+build/rainbowTableGen.o : src/rainbowTableGen.cpp src/rainbowTableGen.hpp build/sha256.o src/reduction.hpp
 	${CC} ${CFLAGS} src/rainbowTableGen.cpp -c -o build/rainbowTableGen.o 
 
 build/rainbowAttack.o : src/rainbowAttack.cpp src/rainbowAttack.hpp

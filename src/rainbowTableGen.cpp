@@ -1,15 +1,16 @@
 #include "src/rainbowTableGen.hpp"
-#include "src/sha256.h"
-#include "src/utils.hpp"
 #include "src/passwd-utils.hpp"
+#include <thread>
 
 using namespace std::chrono;
 namespace rainbow
 {
 
-RainbowTableGen::RainbowTableGen(const float size,
-                                 unsigned pwdLength):
-    size_{size}, pwdLength_{pwdLength}, reduction_{Reduction(pwdLength)},
+const unsigned RainbowTableGen::num_cpus =
+    std::thread::hardware_concurrency();
+
+RainbowTableGen::RainbowTableGen(const float size):
+    size_{size},
     rainbowTableFile_{}
 {}
 
@@ -35,7 +36,7 @@ static void printGenerationProgression(double currentSize,
 }
 
 static void printEndGenerator(std::chrono::milliseconds
-                              duration, unsigned nbChains)
+                              duration)
 {
     std::cout << "\r" << std::flush;
     std::cout << "100%... Loading finish !" << std::endl;
@@ -49,97 +50,101 @@ static void printEndGenerator(std::chrono::milliseconds
     std::cout << msToHours(duration.count()) << " hours : ";
     std::cout << msToMinute(duration.count()) << " minutes : ";
     std::cout << msToSecond(duration.count()) << " seconds" << std::endl;
-    std::cout << "[STATS] : " << nbChains << " chains generated" <<
-              std::endl;
 }
 
 void RainbowTableGen::generateTable()
 {
-    rainbowTableFile_.open(FILE_NAME_RTABLE,
-                           std::ios::out | std::ios::binary | std::ios::trunc);
-    if (this->rainbowTableFile_.is_open())
+    std::string filename[num_cpus];
+    const float sizeTableOnByte = getSizeOnBytes(this->size_);
+    printStartGenerator(sizeTableOnByte);
+    float size_by_cpu = sizeTableOnByte / num_cpus;
+    auto start = high_resolution_clock::now();
+    std::vector<std::thread> threads;
+    filename[0] = "miniRainbow" + std::to_string(1) + ".txt";
+    threads.push_back(std::thread(&RainbowTableGen::generateMiniTable,
+                                  this,
+                                  std::ref(filename[0]), size_by_cpu));
+    for (unsigned int i = 1; i < num_cpus; ++i)
     {
-        const float sizeTableOnByte = getSizeOnBytes(this->size_);
-        float currentSize = 0;
-        printStartGenerator(sizeTableOnByte);
-        rtChain precomputed;
-        unsigned counterEnregistrement = 0;
-        std::vector<rtChain> tempVec;
-        tempVec.reserve(ceil(sizeTableOnByte /
-                             RTCHAIN_SIZE)); // reserve memory to avoid a couple of allocations
-        auto start = high_resolution_clock::now();
-        for (currentSize = 0; currentSize < sizeTableOnByte;
-                currentSize += RTCHAIN_SIZE)
-        {
-            buildPrecomputedHashChain(precomputed);
-            insertToPrecomputedOrdered(precomputed, tempVec);
-            counterEnregistrement++;
-            printGenerationProgression(currentSize, sizeTableOnByte);
-        }
-        auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<milliseconds>(stop - start);
-        writePrecomputedValuesIntoTable(tempVec);
-        tempVec.clear();
-        printEndGenerator(duration, counterEnregistrement);
-        this->rainbowTableFile_.close();
+        filename[i] = "miniRainbow" + std::to_string(i + 1) + ".txt";
+        threads.push_back(std::thread(&RainbowTableGen::generateMiniTable,
+                                      this,
+                                      std::ref(filename[i]), size_by_cpu));
     }
-    else
+    for (auto & thread : threads)
     {
-        std::cerr << "[ERROR] : Opening file " << FILE_NAME_RTABLE <<
-                  " failed" <<
-                  std::endl;
+        thread.join();
     }
+    std::vector<RTChain> tempVec;
+    tempVec.reserve(ceil(sizeTableOnByte /
+                         RTCHAIN_SIZE)); // reserve memory to avoid a couple of allocations
+    for (unsigned int i = 0; i < num_cpus; ++i)
+    {
+        combineOrderedMiniTableIntoVec(filename[i], tempVec);
+    }
+    writePrecomputedValuesIntoTable(tempVec);
+    tempVec.clear();
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    printEndGenerator(duration);
 }
 
-std::string * RainbowTableGen::calculTail(std::string & password)
+void RainbowTableGen::buildPrecomputedHashChain(RTChain & rtchain)
 const
 {
-    static std::string tail = password;
-    for (unsigned step = 0; step < HASH_LEN; ++step)
-    {
-        tail = sha256(tail);
-        tail = *this->reduction_.reduce(tail, step);
-
-    }
-    return &tail;
-}
-
-void RainbowTableGen::buildPrecomputedHashChain(
-    rtChain & rtchain)
-const
-{
-    std::string password = generate_passwd(random(
-            this->pwdLength_, this->pwdLength_));
-    strncpy(rtchain.head, password.c_str(), sizeof(rtChain().head));
-    strncpy(rtchain.tail, calculTail(password)->c_str(),
-            sizeof(rtChain().tail));
+    std::string password = generate_passwd(MAXIMAL_PASSWORD_LENGTH);
+    char tail[9];
+    calculTail(password, tail);
+    strncpy(rtchain.head, password.c_str(), sizeof(RTChain().head));
+    strncpy(rtchain.tail, tail, sizeof(RTChain().tail));
 }
 
 
-int RainbowTableGen::findIndexOrdered(const std::string & tail,
-                                      std::vector<rtChain> & vec) const
+void RainbowTableGen::generateMiniTable(std::string & fileName,
+                                        float TableSize)
 {
-    // Searches for tail using the binary search algorithm.
-    int min = 0, max = vec.size() - 1;
-    int mid = (min + max) / 2, comp;
-    while (min <= max)
+    std::fstream table(fileName,
+                       std::ios::trunc | std::ios_base::in | std::ios_base::out |
+                       std::ios_base::binary);
+    if (!table.is_open())
     {
-        comp = tail.compare(vec[mid].tail);
-        if (comp == 0)
-        {
-            return mid;
-        }
-        else if (comp < 0)
-        {
-            max = mid - 1;
-        }
-        else
-        {
-            min = mid + 1;
-        }
-        mid = (min + max) / 2;
+        std::cout << "problem when oppening the file";
+        return;
     }
-    return min;
+    RTChain precomputed;
+    float currentSize = 0;
+    for (currentSize = 0; currentSize < TableSize;
+            currentSize += RTCHAIN_SIZE,
+            this->currentSizeGeneration_ += RTCHAIN_SIZE)
+    {
+        buildPrecomputedHashChain(precomputed);
+        table.write((char *) &precomputed, RTCHAIN_SIZE);
+        printGenerationProgression(this->currentSizeGeneration_,
+                                   TableSize * num_cpus);
+    }
+    table.close();
+}
+
+void RainbowTableGen::combineOrderedMiniTableIntoVec(
+    std::string & fileName, std::vector<RTChain> & vec)
+{
+    std::ifstream table(fileName,
+                        std::ios_base::in | std::ios_base::binary);
+    if (table.is_open())
+    {
+        RTChain chain;
+        unsigned end = table.seekg(0, std::ios::end).tellg() / RTCHAIN_SIZE;
+
+        table.seekg(0, std::ios::beg);
+
+        for (unsigned i = 0; i <= end; i++)
+        {
+            table.seekg(i * RTCHAIN_SIZE);
+            table.read((char *) &chain, RTCHAIN_SIZE);
+            insertToPrecomputedOrdered(chain, vec);
+        }
+        table.close();
+    }
 }
 
 }

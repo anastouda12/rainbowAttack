@@ -1,8 +1,6 @@
 #include "src/rainbowAttack.hpp"
 #include "src/reduction.hpp"
 #include "src/sha256.h"
-#include "src/utils.hpp"
-#include <iostream>
 
 
 namespace rainbow
@@ -38,10 +36,9 @@ void RainbowAttack::getHashesToCrack(const std::string & filepath)
     in.close();
 }
 
-RainbowTableGen::rtChain
-RainbowAttack::pwdBinarySearch(std::string & reduc)
+RTChain RainbowAttack::pwdBinarySearch(std::string & reduc)
 {
-    RainbowTableGen::rtChain chain;
+    RTChain chain;
     if (rainbowTableFile_.is_open())
     {
         rainbowTableFile_.clear();
@@ -80,23 +77,22 @@ std::string RainbowAttack::crackPassword(
     std::string & hash)
 {
 
-    Reduction reduction(MAXIMAL_PASSWORD_LENGTH);
     std::string password(MAXIMAL_PASSWORD_LENGTH, ' ');
     std::string head(MAXIMAL_PASSWORD_LENGTH, ' ');
     std::string previous(MAXIMAL_PASSWORD_LENGTH, ' ');
     std::string current = head;
     unsigned step = HASH_LEN - 1; // last function reduction used
     unsigned nbFailures = 0;
-    current = *reduction.reduce(hash, step);
-    RainbowTableGen::rtChain headTail = pwdBinarySearch(current);
+    //rainbow::reduce(hash, current, step, 8);
+    RTChain headTail = pwdBinarySearch(current);
     nbFailures++;
     while (headTail.head[0] == '\0' && nbFailures < HASH_LEN)
     {
         current = sha256(hash);
         for (unsigned i = nbFailures; i > 0; i--)
         {
-            current = *reduction.reduce(current,
-                                        (HASH_LEN - 1) - i); // HASH_LEN - 1 its the last reduction used
+            //rainbow::reduce(current, current, (HASH_LEN - 1) - i,
+            //  8); // HASH_LEN - 1 its the last reduction used
             current = sha256(current);
         }
         headTail = pwdBinarySearch(current);
@@ -121,7 +117,7 @@ std::string RainbowAttack::crackPassword(
             }
             else
             {
-                current = *reduction.reduce(current, column);
+                //rainbow::reduce(current, current, column, 8);
                 previous = current;
                 column++;
             }

@@ -1,17 +1,12 @@
 #ifndef RAINBOWTABLEGEN_HPP
 #define RAINBOWTABLEGEN_HPP
 
-#define HASH_LEN 50000
-#define MINIMAL_PASSWORD_LENGTH 6
-#define MAXIMAL_PASSWORD_LENGTH 8
-#define RTCHAIN_SIZE sizeof(RainbowTableGen::rtChain)
-
-
 #include <fstream>
 #include <utility>
 #include <vector>
 #include "src/reduction.hpp"
-
+#include "src/utils.hpp"
+#include "src/sha256.h"
 
 namespace rainbow
 {
@@ -19,23 +14,15 @@ namespace rainbow
 class RainbowTableGen
 {
 
+    static const unsigned num_cpus;
+
     /**
      * @brief Size on MegaByte of the rainbowTable.
      */
     float size_;
 
 
-    /**
-     * @brief pwdLength_ Length of the password
-     */
-    unsigned pwdLength_;
-
-
-    /**
-     * @brief reduction_ reduction function
-     */
-    Reduction reduction_;
-
+    float currentSizeGeneration_;
 
     /**
      * @brief File containing the rainbow table.
@@ -45,20 +32,11 @@ class RainbowTableGen
   public :
 
     /**
-     * @brief The rtChain struct Chain of a rainbowTable with the head and the tail
-     */
-    struct rtChain
-    {
-        char head[MAXIMAL_PASSWORD_LENGTH + 1];
-        char tail[MAXIMAL_PASSWORD_LENGTH + 1];
-    };
-
-    /**
      * @brief RainbowTableGen Constructor of a rainbowTable
      * @param size Size in MB of the table
      * @param pwdLength Length of passwords
      */
-    RainbowTableGen(const float size, unsigned pwdLength);
+    RainbowTableGen(const float size);
 
     ~RainbowTableGen();
 
@@ -68,18 +46,36 @@ class RainbowTableGen
     void generateTable();
 
   private:
+
+
+    void generateMiniTable(std::string & fileName, float TableSize);
+    void combineOrderedMiniTableIntoVec(std::string & fileName,
+                                        std::vector<RTChain> & vecToFill);
+
+
     /**
      * @brief calculTail Calcul the tail of a password given.
      * @param password Password to calcul the tail
      * @return the tail of the passwords
      */
-    std::string * calculTail(std::string & password) const;
+    constexpr void calculTail(std::string & password, char * tail)
+    const
+    {
+        for (unsigned i = 0; i < password.length(); i++)
+        {
+            tail[i] = password[i];
+        }
+        for (unsigned step = 0; step < HASH_LEN; ++step)
+        {
+            rainbow::reduce(sha256(tail), tail, step, 8);
+        }
+    }
 
     /**
      * @brief buildPrecomputedHashChain Construct a chain of the rainbowtable with reduce function and hash
      * @param rtChain Head and tails chains
      */
-    void buildPrecomputedHashChain(rtChain & rtChain) const;
+    inline void buildPrecomputedHashChain(RTChain & rtchain) const;
 
     /**
      * @brief findIndexOrdered Find index ordered with the tails to insert the tail given
@@ -87,19 +83,48 @@ class RainbowTableGen
      * @param vec temporary vector helping to sort the table
      * @return index inside the vector where the tails should be
      */
-    int findIndexOrdered(const std::string & tail,
-                         std::vector<rtChain> & vec) const;
+    constexpr int findIndexOrdered(const std::string & tail,
+                                   std::vector<RTChain> & vec)const
+    {
+        // Searches for tail using the binary search algorithm.
+        int min = 0, max = vec.size() - 1;
+        int mid = (min + max) >> 1, comp = 0;
+        while (min <= max)
+        {
+            comp = tail.compare(vec[mid].tail);
+            if (comp == 0)
+            {
+                return mid;
+            }
+            else if (comp < 0)
+            {
+                max = mid - 1;
+            }
+            else
+            {
+                min = mid + 1;
+            }
+            mid = (min + max) >> 1;
+        }
+        return min;
+    }
 
     /**
      * @brief writePrecomputedValuesIntoTable Write all precomputed value of the rainbowTable
      * @param vec temporary vector of the rainbowTable
      */
-    inline void writePrecomputedValuesIntoTable(
-        const std::vector<rtChain> & vec)
+    constexpr void writePrecomputedValuesIntoTable(
+        const std::vector<RTChain> & vec)
     {
-        for (rtChain chain : vec)
+        rainbowTableFile_.open(FILE_NAME_RTABLE,
+                               std::ios::out | std::ios::binary | std::ios::trunc);
+        if (rainbowTableFile_.is_open())
         {
-            this->rainbowTableFile_.write((char *) &chain, RTCHAIN_SIZE);
+            for (RTChain chain : vec)
+            {
+                this->rainbowTableFile_.write((char *) &chain, RTCHAIN_SIZE);
+            }
+            rainbowTableFile_.close();
         }
 
     }
@@ -109,8 +134,8 @@ class RainbowTableGen
      * @param rtchain Chains to insert into the vector
      * @param vec temporary vector to sort the table
      */
-    inline void insertToPrecomputedOrdered(const rtChain & rtchain,
-                                           std::vector <rtChain> & vec)
+    constexpr void insertToPrecomputedOrdered(const RTChain & rtchain,
+            std::vector <RTChain> & vec)
     {
         //Find the position where the pair should be inserted, and insert it. O(log n) time.
         int index = findIndexOrdered(rtchain.tail, vec);

@@ -14,8 +14,6 @@ namespace rainbow
 class RainbowTableGen
 {
 
-    static const unsigned num_cpus;
-
     /**
      * @brief Size on MegaByte of the rainbowTable.
      */
@@ -48,8 +46,10 @@ class RainbowTableGen
   private:
 
 
-    void generateMiniTable(std::string & fileName, float TableSize);
-    void combineOrderedMiniTableIntoVec(std::string & fileName,
+    void generateMiniTable(std::string & fileName,
+                           float TableSize);
+    void combineOrderedMiniTableIntoVec(std::string
+                                        filesName[],
                                         std::vector<RTChain> & vecToFill);
 
 

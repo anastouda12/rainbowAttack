@@ -1,13 +1,11 @@
 #include "src/rainbowTableGen.hpp"
 #include "src/passwd-utils.hpp"
-#include <thread>
+#include "src/threadpool.hpp"
 
 using namespace std::chrono;
 namespace rainbow
 {
 
-const unsigned RainbowTableGen::num_cpus =
-    std::thread::hardware_concurrency();
 
 RainbowTableGen::RainbowTableGen(const float size):
     size_{size},
@@ -52,36 +50,26 @@ static void printEndGenerator(std::chrono::milliseconds
     std::cout << msToSecond(duration.count()) << " seconds" << std::endl;
 }
 
+void noon();
 void RainbowTableGen::generateTable()
 {
-    std::string filename[num_cpus];
+    dg::utils::ThreadPool pool(num_cpus, true);
+    std::string filesName[num_cpus];
     const float sizeTableOnByte = getSizeOnBytes(this->size_);
     printStartGenerator(sizeTableOnByte);
     float size_by_cpu = sizeTableOnByte / num_cpus;
     auto start = high_resolution_clock::now();
-    std::vector<std::thread> threads;
-    filename[0] = "miniRainbow" + std::to_string(1) + ".txt";
-    threads.push_back(std::thread(&RainbowTableGen::generateMiniTable,
-                                  this,
-                                  std::ref(filename[0]), size_by_cpu));
-    for (unsigned int i = 1; i < num_cpus; ++i)
+    for (unsigned int i = 0; i < num_cpus; ++i)
     {
-        filename[i] = "miniRainbow" + std::to_string(i + 1) + ".txt";
-        threads.push_back(std::thread(&RainbowTableGen::generateMiniTable,
-                                      this,
-                                      std::ref(filename[i]), size_by_cpu));
+        filesName[i] = "miniRainbow" + std::to_string(i + 1) + ".txt";
+        pool.enqueue(std::mem_fn(&RainbowTableGen::generateMiniTable), this,
+                     std::ref(filesName[i]), size_by_cpu);
     }
-    for (auto & thread : threads)
-    {
-        thread.join();
-    }
+    pool.join();
     std::vector<RTChain> tempVec;
     tempVec.reserve(ceil(sizeTableOnByte /
                          RTCHAIN_SIZE)); // reserve memory to avoid a couple of allocations
-    for (unsigned int i = 0; i < num_cpus; ++i)
-    {
-        combineOrderedMiniTableIntoVec(filename[i], tempVec);
-    }
+    combineOrderedMiniTableIntoVec(filesName, tempVec);
     writePrecomputedValuesIntoTable(tempVec);
     tempVec.clear();
     auto stop = high_resolution_clock::now();
@@ -108,7 +96,8 @@ void RainbowTableGen::generateMiniTable(std::string & fileName,
                        std::ios_base::binary);
     if (!table.is_open())
     {
-        std::cout << "problem when oppening the file";
+        std::cout << "[ERROR] : Opening file " << fileName << "Thread : " <<
+                  std::this_thread::get_id() << std::endl;
         return;
     }
     RTChain precomputed;
@@ -125,25 +114,28 @@ void RainbowTableGen::generateMiniTable(std::string & fileName,
     table.close();
 }
 
-void RainbowTableGen::combineOrderedMiniTableIntoVec(
-    std::string & fileName, std::vector<RTChain> & vec)
+void RainbowTableGen::combineOrderedMiniTableIntoVec(std::string
+        filesName[], std::vector<RTChain> & vecToFill)
 {
-    std::ifstream table(fileName,
-                        std::ios_base::in | std::ios_base::binary);
-    if (table.is_open())
+    for (unsigned i = 0; i < num_cpus; ++i)
     {
-        RTChain chain;
-        unsigned end = table.seekg(0, std::ios::end).tellg() / RTCHAIN_SIZE;
-
-        table.seekg(0, std::ios::beg);
-
-        for (unsigned i = 0; i <= end; i++)
+        std::ifstream table(filesName[i],
+                            std::ios_base::in | std::ios_base::binary);
+        if (table.is_open())
         {
-            table.seekg(i * RTCHAIN_SIZE);
-            table.read((char *) &chain, RTCHAIN_SIZE);
-            insertToPrecomputedOrdered(chain, vec);
+            RTChain chain;
+            unsigned end = table.seekg(0, std::ios::end).tellg() / RTCHAIN_SIZE;
+
+            table.seekg(0, std::ios::beg);
+
+            for (unsigned i = 0; i <= end; i++)
+            {
+                table.seekg(i * RTCHAIN_SIZE);
+                table.read((char *) &chain, RTCHAIN_SIZE);
+                insertToPrecomputedOrdered(chain, vecToFill);
+            }
+            table.close();
         }
-        table.close();
     }
 }
 

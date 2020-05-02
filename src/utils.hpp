@@ -2,6 +2,7 @@
 #define UTILS_HPP
 
 #include <iostream>
+#include <thread>
 
 #define msToMinute(ms) ((ms/(1000*60))%60)
 #define msToHours(ms) ((ms/(1000*60*60))%24)
@@ -25,6 +26,9 @@ struct RTChain
     char head[MAXIMAL_PASSWORD_LENGTH + 1];
     char tail[MAXIMAL_PASSWORD_LENGTH + 1];
 };
+
+static const unsigned num_cpus =
+    std::thread::hardware_concurrency(); // number optimal thread
 
 constexpr const char * ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                   "abcdefghijklmnopqrstuvwxyz"

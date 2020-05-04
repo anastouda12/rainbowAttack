@@ -42,7 +42,7 @@
             for (unsigned i = 0; i <= end; i++){  \
                 table.seekg(i * RTCHAIN_SIZE);  \
                 table.read((char *) &chain, RTCHAIN_SIZE);  \
-                insertToPrecomputedOrdered(chain, vecToFill);   \
+                insertToPrecomputedOrdered(std::move(chain), vecToFill);   \
             }\
             table.close();\
         }\
@@ -169,13 +169,12 @@ namespace rainbow
              * @param rtchain Chains to insert into the vector
              * @param vec temporary vector to sort the table
              */
-            constexpr void insertToPrecomputedOrdered(const RTChain &rtchain,
+            constexpr void insertToPrecomputedOrdered(RTChain &&rtchain,
                             std::vector <RTChain> &vec)
             {
                 //Find the position where the pair should be inserted, and insert it. O(log n) time.
                 int index = findIndexOrdered(rtchain.tail, vec);
-                vec.insert(vec.begin() + index, rtchain);
-
+                vec.insert(vec.begin() + index, std::move(rtchain));
             }
     };
 } // end namespace rainbow

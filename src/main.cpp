@@ -29,13 +29,14 @@ static void rainbowAttack(std::string pwdPath)
     att.attack();
 }
 
-static int commandManager(int argc, char ** argv)
+static int commandManager(int argc, char **argv)
 {
     if (argc < 2)
     {
         help();
         return -1;
     }
+
     if (strcmp(argv[1], "generate") == 0)
     {
         if (argc < 3)
@@ -45,6 +46,7 @@ static int commandManager(int argc, char ** argv)
                       std::endl;
             return -1;
         }
+
         try
         {
             float size = std::stof(argv[2]);
@@ -66,6 +68,7 @@ static int commandManager(int argc, char ** argv)
                       << std::endl;
             return -3;
         }
+
         rainbowAttack(argv[2]);
     }
     else
@@ -73,11 +76,12 @@ static int commandManager(int argc, char ** argv)
         help();
         return -1;
     }
+
     return -2;
 }
 
 
-int main(int argc, char ** argv)
+int main(int argc, char **argv)
 {
     return commandManager(argc, argv);
 }

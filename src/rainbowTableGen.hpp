@@ -25,8 +25,8 @@
 
 
 #define buildPrecomputedHashChain(rtchain)   \
-    std::string && password = generate_passwd(MAXIMAL_PASSWORD_LENGTH); \
-    char tail[MAXIMAL_PASSWORD_LENGTH+1] ="";                           \
+    std::string && password = generate_passwd(PASSWORD_SIZE); \
+    char tail[PASSWORD_SIZE+1] ="";                           \
     copyArrays(password.c_str(),rtchain.head);\
     calculTail(std::move(password), tail); \
     copyArrays(tail,rtchain.tail);\
@@ -88,6 +88,7 @@ namespace rainbow
 
             void generateMiniTable(const std::string &fileName,
                                    float TableSize);
+
 
             /**
              * @brief calculTail Calcul the tail of a password given.

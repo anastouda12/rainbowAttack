@@ -86,9 +86,9 @@ namespace rainbow
             std::string &hash)
     {
 
-        std::string password(MAXIMAL_PASSWORD_LENGTH, ' ');
-        std::string head(MAXIMAL_PASSWORD_LENGTH, ' ');
-        std::string previous(MAXIMAL_PASSWORD_LENGTH, ' ');
+        std::string password(PASSWORD_SIZE, ' ');
+        std::string head(PASSWORD_SIZE, ' ');
+        std::string previous(PASSWORD_SIZE, ' ');
         std::string current = head;
         unsigned step = HASH_LEN - 1; // last function reduction used
         unsigned nbFailures = 0;

@@ -13,24 +13,21 @@
     std::cout << std::setfill('0')  << std::fixed << std::setprecision(4);\
     std::cout << (static_cast<double>(c_size) / static_cast<double>(e_size)) * 100 << " % ...\r" << std::flush;\
 
-#define printEndGenerator(duration)                                        \
-    std::cout << "[SUCCESS] : RainbowTable was generated on file 'Build/" << \
-              FILE_NAME_RTABLE                                                 \
-              << "'"                                                            \
-              << std::endl;                                                      \
-    std::cout << "[DURATION] : Generated on "; \
-    std::cout << msToHours(duration.count()) << " hours : ";                        \
-    std::cout << msToMinute(duration.count()) << " minutes : ";                     \
-    std::cout << msToSecond(duration.count()) << " seconds" << std::endl;           \
+#define printEndGenerator(ms)                                        \
+    std::cout << "[SUCCESS] : RainbowTable was generated on file 'Build/" \
+              << FILE_NAME_RTABLE \
+              << "'"         \
+              << std::endl;     \
+    std::cout << "[DURATION] : Generated on ";   \
+    std::cout << msToHours(ms) << " hours : ";   \
+    std::cout << msToMinute(ms) << " minutes : ";   \
+    std::cout << msToSecond(ms) << " seconds" << std::endl;  \
 
 
 #define buildPrecomputedHashChain(rtchain)   \
     std::string && password = generate_passwd(PASSWORD_SIZE); \
-    char tail[PASSWORD_SIZE+1] ="";                           \
     copyArrays(password.c_str(),rtchain.head);\
-    calculTail(std::move(password), tail); \
-    copyArrays(tail,rtchain.tail);\
-
+    calculTail(password, rtchain.tail); \
 
 #define combineOrderedMiniTableIntoVec(filesName, vecToFill)    \
     for (unsigned i = 0; i < num_cpus; ++i){\
@@ -39,9 +36,10 @@
             RTChain chain;  \
             unsigned end = table.seekg(0, std::ios::end).tellg() / RTCHAIN_SIZE;\
             table.seekg(0, std::ios::beg);  \
-            for (unsigned i = 0; i <= end; i++){  \
+            for (unsigned i = 0; i < end; ++i){  \
                 table.seekg(i * RTCHAIN_SIZE);  \
                 table.read((char *) &chain, RTCHAIN_SIZE);  \
+                std::cout << chain.head << " " << chain.tail << " " << i << std::endl;\
                 insertToPrecomputedOrdered(std::move(chain), vecToFill);   \
             }\
             table.close();\
@@ -74,7 +72,7 @@ namespace rainbow
              * @param size Size in MB of the table
              * @param pwdLength Length of passwords
              */
-            RainbowTableGen(const float size);
+            RainbowTableGen(float &&size);
 
             ~RainbowTableGen();
 
@@ -87,7 +85,7 @@ namespace rainbow
 
 
             void generateMiniTable(const std::string &fileName,
-                                   float TableSize);
+                                   const int nbchain_by_cpu);
 
 
             /**
@@ -95,14 +93,14 @@ namespace rainbow
              * @param password Password to calcul the tail
              * @return the tail of the passwords
              */
-            constexpr void calculTail(const std::string &&password, char *tail)
+            constexpr void calculTail(const std::string &password, char *tail)
             const
             {
                 copyArrays(password.c_str(), tail);
 
                 for (unsigned step = 0; step < HASH_LEN; ++step)
                 {
-                    rainbow::reduce(sha256(tail), tail, step, 8);
+                    rainbow::reduce(sha256(tail), tail, step, PASSWORD_SIZE);
                 }
             }
 
@@ -148,7 +146,7 @@ namespace rainbow
              * @param vec temporary vector of the rainbowTable
              */
             constexpr void writePrecomputedValuesIntoTable(
-                    const std::vector<RTChain> &&vec)
+                    const std::vector<RTChain> &vec)
             {
                 rainbowTableFile_.open(FILE_NAME_RTABLE,
                                        std::ios::out | std::ios::binary | std::ios::trunc);

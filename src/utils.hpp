@@ -32,6 +32,11 @@ namespace rainbow
     };
     constexpr const unsigned RTCHAIN_SIZE = sizeof(rainbow::RTChain);
 
+    constexpr bool isEmptyChain(RTChain chain)
+    {
+        return chain.head[0] != '\0' && chain.tail[0] != '\0';
+    }
+
     constexpr float getSizeOnBytes(const float mb)
     {
         return mb * MB_TO_BYTE;
@@ -49,6 +54,8 @@ namespace rainbow
         {
             dest[i] = src[i];
         }
+
+        dest[sizeof(dest)] = '\0';
     }
 
     constexpr unsigned msToMinute(long &&ms)
@@ -65,7 +72,6 @@ namespace rainbow
     {
         return ((ms / (1000 * 60 * 60)) % 24);
     }
-
 
 
 

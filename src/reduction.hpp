@@ -16,7 +16,7 @@ namespace rainbow
                           char *reduction,
                           unsigned column, unsigned pwdLength)
     {
-        for (unsigned i = 0, currentindex = 0; i < pwdLength; i++)
+        for (unsigned i = 0, currentindex = 0; i < pwdLength; ++i)
         {
             currentindex = hash[((i + column) &
                                                (SHA256_LENGTH - 1))]; // bitwise & ; SHA256_LENGTH is a power of 2

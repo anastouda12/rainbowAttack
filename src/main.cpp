@@ -16,19 +16,6 @@ static void help()
               "<option...pathFile to hashes passwords>" << std::endl;
 }
 
-static void rainbowTableGenerate(float size)
-{
-    rainbow::RainbowTableGen gen(size);
-    gen.generateTable();
-
-}
-
-static void rainbowAttack(std::string pwdPath)
-{
-    rainbow::RainbowAttack att(pwdPath);
-    att.attack();
-}
-
 static int commandManager(int argc, char **argv)
 {
     if (argc < 2)
@@ -49,8 +36,9 @@ static int commandManager(int argc, char **argv)
 
         try
         {
-            float size = std::stof(argv[2]);
-            rainbowTableGenerate(size);
+            float &&size_table = std::stof(argv[2]);
+            rainbow::RainbowTableGen gen{std::move(size_table)};
+            gen.generateTable();
         }
         catch (...)
         {
@@ -69,7 +57,8 @@ static int commandManager(int argc, char **argv)
             return -3;
         }
 
-        rainbowAttack(argv[2]);
+        rainbow::RainbowAttack att{argv[2]};
+        att.attack();
     }
     else
     {

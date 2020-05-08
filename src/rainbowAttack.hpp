@@ -22,7 +22,7 @@ namespace rainbow
             /**
              * @brief LoginAndHashToCrack_ All pair login-hash to crack inside 'HashToCrackFile' given.
              */
-            std::vector<std::pair<std::string, std::string>> LoginAndHashToCrack_;
+            std::vector<std::string> hashesToCrack_;
 
             /**
              * @brief passwordCracked_ File containing the passwords cracked
@@ -60,7 +60,7 @@ namespace rainbow
              * @brief RainbowAttack Constructor of the rainbowAttack
              * @param hashToCrackFile file containing the hashes to crack
              */
-            RainbowAttack(std::string &hashToCrackFile);
+            RainbowAttack(std::string &&hashToCrackFile);
             ~RainbowAttack();
 
             /**

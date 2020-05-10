@@ -14,7 +14,7 @@ namespace rainbow
                                      "abcdefghijklmnopqrstuvwxyz"
                                      "0123456789";
     constexpr const unsigned PASSWORD_SIZE = 8;
-    constexpr const unsigned HASH_LEN = 50000;
+    constexpr const int HASH_LEN = 50000;
     constexpr const unsigned SHA256_SIZE_BYTE = 32;
     constexpr const unsigned SHA256_LENGTH = 64;
     constexpr const char *FILE_NAME_RTABLE = "RainbowTable.txt";
@@ -30,11 +30,18 @@ namespace rainbow
         char head[PASSWORD_SIZE + 1];
         char tail[PASSWORD_SIZE + 1];
     };
+
+    inline bool operator<(const RTChain lhs,
+                          const RTChain rhs)
+    {
+        return std::strncmp(lhs.tail, rhs.tail, PASSWORD_SIZE) < 0;
+    }
+
     constexpr const unsigned RTCHAIN_SIZE = sizeof(rainbow::RTChain);
 
     constexpr bool isEmptyChain(RTChain chain)
     {
-        return chain.head[0] != '\0' && chain.tail[0] != '\0';
+        return chain.head[0] == '\0' && chain.tail[0] == '\0';
     }
 
     constexpr float getSizeOnBytes(const float mb)

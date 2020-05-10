@@ -23,27 +23,25 @@ namespace rainbow
     {
         dg::utils::ThreadPool pool(num_cpus, true);
         std::string filesName[num_cpus];
-        const int NBCHAIN_TABLE = ceil(getSizeOnBytes(this->size_) / RTCHAIN_SIZE);
-        const int NBCHAIN_BY_CPU = NBCHAIN_TABLE / num_cpus;
+        int nbchain_table = ceil(getSizeOnBytes(this->size_) / RTCHAIN_SIZE);
+        int nbchain_by_cpu = nbchain_table / num_cpus;
         auto start = high_resolution_clock::now();
         //First thread takes the rest of nbr entries modulo nbr threads + his share of the work
         filesName[0] = "miniRainbow1.txt";
         pool.enqueue(std::mem_fn(&RainbowTableGen::generateMiniTable), this,
-                     std::ref(filesName[0]), NBCHAIN_BY_CPU + NBCHAIN_TABLE % num_cpus);
+                     std::ref(filesName[0]), nbchain_by_cpu + nbchain_table % num_cpus);
 
         for (unsigned int i = 1; i < num_cpus; ++i)
         {
             filesName[i] = "miniRainbow" + std::to_string(i + 1) + ".txt";
             pool.enqueue(std::mem_fn(&RainbowTableGen::generateMiniTable), this,
-                         std::ref(filesName[i]), NBCHAIN_BY_CPU);
+                         std::ref(filesName[i]), nbchain_by_cpu);
         }
 
         pool.join();
-        std::vector<RTChain> tempVec;
-        tempVec.reserve(NBCHAIN_TABLE); // reserve memory to avoid a couple of allocations
-        combineOrderedMiniTableIntoVec(filesName, tempVec);
-        writePrecomputedValuesIntoTable(tempVec);
-        tempVec.clear();
+        std::set<RTChain> tempSet;
+        combineOrderedMiniTableIntoSet(filesName, tempSet);
+        writePrecomputedValuesIntoTable(tempSet);
         auto stop = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(stop - start);
         printEndGenerator(duration.count());

@@ -22,6 +22,9 @@ namespace rainbow
                                                (SHA256_LENGTH - 1))]; // bitwise & ; SHA256_LENGTH is a power of 2
             reduction[i] = ALPHABET[currentindex % ALPHABET_SIZE];
         }
+
+        reduction[pwdLength] = '\0';
+
     }
 
 } // end namespace rainbow

@@ -14,9 +14,9 @@ namespace rainbow
                                      "abcdefghijklmnopqrstuvwxyz"
                                      "0123456789";
     constexpr const unsigned PASSWORD_SIZE = 8;
-    constexpr const int HASH_LEN = 50000;
-    constexpr const unsigned SHA256_SIZE_BYTE = 32;
-    constexpr const unsigned SHA256_LENGTH = 64;
+    constexpr const int HASH_LEN = 10000;
+    constexpr const unsigned SHA256_DIGEST_SIZE = 32;
+    constexpr const unsigned SHA256_BLOCKSIZE = 64;
     constexpr const char *FILE_NAME_RTABLE = "RainbowTable.txt";
     constexpr const char *PASSWORD_CRACKED_FILE = "PasswordsCracked.txt";
     constexpr int ALPHABET_SIZE = 62;
@@ -55,14 +55,14 @@ namespace rainbow
     }
 
 
-    constexpr void copyArrays(const char *src, char *dest)
+    constexpr void copyArrays(const char *src, char *dest, unsigned size_dest)
     {
-        for (unsigned i = 0; i < sizeof(dest); i++)
+        for (unsigned i = 0; i < size_dest; i++)
         {
             dest[i] = src[i];
         }
 
-        dest[sizeof(dest)] = '\0';
+        dest[size_dest] = '\0';
     }
 
     constexpr unsigned msToMinute(long &&ms)

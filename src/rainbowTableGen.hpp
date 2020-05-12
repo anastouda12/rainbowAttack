@@ -2,12 +2,10 @@
 #define RAINBOWTABLEGEN_HPP
 
 #include <fstream>
-#include <utility>
 #include <set>
 #include "src/reduction.hpp"
 #include "src/utils.hpp"
 #include "src/sha256.h"
-#include <set>
 
 #define printGenProgress(c_size, e_size)\
     std::cout << "[INFO] Generation rainbowTable : ";\
@@ -27,7 +25,7 @@
 
 #define buildPrecomputedHashChain(rtchain)   \
     std::string && password = generate_passwd(PASSWORD_SIZE); \
-    copyArrays(password.c_str(),rtchain.head);\
+    copyArrays(password.c_str(),rtchain.head,PASSWORD_SIZE);\
     calculTail(password, rtchain.tail); \
 
 #define combineOrderedMiniTableIntoSet(filesName, set_table)    \
@@ -48,6 +46,7 @@
 
 namespace rainbow
 {
+
 
     class RainbowTableGen
     {
@@ -96,11 +95,11 @@ namespace rainbow
             constexpr void calculTail(const std::string &password, char *tail)
             const
             {
-                copyArrays(password.c_str(), tail);
+                copyArrays(password.c_str(), tail, PASSWORD_SIZE);
 
                 for (unsigned step = 0; step < HASH_LEN; ++step)
                 {
-                    rainbow::reduce(sha256(tail), tail, step, PASSWORD_SIZE);
+                    reduce(sha256(tail), tail, step, PASSWORD_SIZE);
                 }
             }
 

@@ -8,20 +8,6 @@
 #include "src/reduction.hpp"
 
 
-#define searchChain(hash, chain)\
-    std::string current(PASSWORD_SIZE, ' ');\
-    for (unsigned i = HASH_LEN - 1; i > 0; --i){\
-        current = hash;\
-        for (unsigned j = i; j < HASH_LEN; ++j){\
-            reduce(current, chain.tail, j, PASSWORD_SIZE);\
-            current = sha256(chain.tail);\
-        }\
-        pwdBinarySearch(chain.tail,chain);\
-        if (!isEmptyChain(chain)){\
-            break;\
-        }\
-    }\
-
 namespace rainbow
 {
 
@@ -36,15 +22,17 @@ namespace rainbow
             std::ifstream rainbowTableFile_;
 
             /**
-             * @brief LoginAndHashToCrack_ All pair login-hash to crack inside 'HashToCrackFile' given.
-             */
-            std::vector<std::string> hashesToCrack_;
-
-            /**
              * @brief passwordCracked_ File containing the passwords cracked
              */
             std::ofstream passwordCracked_;
 
+            /**
+             * @brief File containing the hashes.
+             */
+            std::ifstream passwordHashes_;
+
+            const int INDEX_MIN_RT;
+            const int INDEX_MAX_RT;
 
 
             /**
@@ -57,7 +45,37 @@ namespace rainbow
             {
                 RTChain chain;
                 searchChain(hash, chain);
-                return buildUpPassword(hash, chain);
+
+                if (!isEmptyChain(chain))
+                {
+                    return buildUpPassword(hash, chain);
+                }
+
+                return "NOTFOUNDCHAIN";
+            }
+
+
+            constexpr void searchChain(std::string &hash, RTChain &chain)
+            {
+                char current [SHA256_BLOCKSIZE] = "";
+
+                for (unsigned i = HASH_LEN - 1; i > 0; --i)
+                {
+                    copyArrays(hash.c_str(), current, SHA256_BLOCKSIZE);
+
+                    for (unsigned j = i; j < HASH_LEN; ++j)
+                    {
+                        reduce(current, chain.tail, j, PASSWORD_SIZE);
+                        copyArrays(sha256(chain.tail).c_str(), current, SHA256_BLOCKSIZE);
+                    }
+
+                    pwdBinarySearch(chain.tail, chain, INDEX_MIN_RT, INDEX_MAX_RT);
+
+                    if (!isEmptyChain(chain))
+                    {
+                        break;
+                    }
+                }
             }
 
 
@@ -65,20 +83,15 @@ namespace rainbow
              * @brief pwdBinarySearch Binary search inside the rainbowtable to retrieves the chain who has the tail reduce given in param
              * @param reduc the reduction given to checks in the rainbowtable
              * @param chain the chain where the result chain will be - If found, if not found the chain will be empty
+             * @param min Mini index of RT
+             * @param max Max index of RT
              */
-            constexpr void pwdBinarySearch(std::string &&reduc, RTChain &chain)
+            constexpr void pwdBinarySearch(std::string &&reduc, RTChain &chain, int min, int max)
             {
-                bool found = false;
-                rainbowTableFile_.open(FILE_NAME_RTABLE, std::ios::binary);
-
                 if (rainbowTableFile_.is_open())
                 {
-                    rainbowTableFile_.clear();
-                    long min = rainbowTableFile_.seekg(0,
-                                                       std::ios::beg).tellg() / RTCHAIN_SIZE;
-                    long max = rainbowTableFile_.seekg(0,
-                                                       std::ios::end).tellg() / RTCHAIN_SIZE;
-                    long mid =  mid = (min + max) >> 1;
+                    bool found = false;
+                    int mid =  mid = (min + max) >> 1;
                     int comp = 0;
                     rainbowTableFile_.clear();
                     rainbowTableFile_.seekg(0, std::ios::beg);
@@ -111,8 +124,55 @@ namespace rainbow
                         chain = RTChain();        // Chain not found - reset
                     }
                 }
+            }
 
-                rainbowTableFile_.close();
+
+            constexpr int getMinIndexTable()
+            {
+                int min = -1;
+
+                if (!rainbowTableFile_.is_open())
+                {
+                    rainbowTableFile_.open(FILE_NAME_RTABLE, std::ios::in | std::ios::binary);
+                }
+
+                if (!rainbowTableFile_.fail())
+                {
+                    min = rainbowTableFile_.seekg(0, std::ios::beg).tellg() / RTCHAIN_SIZE;
+                    rainbowTableFile_.clear();
+                    rainbowTableFile_.close();
+                }
+                else
+                {
+                    std::cerr << "[ERROR] : RainbowTable file : " << FILE_NAME_RTABLE << " failed to opening" << std::endl;
+                    exit(-3);
+                }
+
+                return min;
+            }
+
+            constexpr int getMaxIndexTable()
+            {
+                int max = -1;
+
+                if (!rainbowTableFile_.is_open())
+                {
+                    rainbowTableFile_.open(FILE_NAME_RTABLE, std::ios::in | std::ios::binary);
+                }
+
+                if (!rainbowTableFile_.fail())
+                {
+                    max = rainbowTableFile_.seekg(0, std::ios::end).tellg() / RTCHAIN_SIZE;
+                    rainbowTableFile_.clear();
+                    rainbowTableFile_.close();
+                }
+                else
+                {
+                    std::cerr << "[ERROR] : RainbowTable file : " << FILE_NAME_RTABLE << " failed to opening" << std::endl;
+                    exit(-3);
+                }
+
+                return max;
             }
 
 
@@ -148,7 +208,7 @@ namespace rainbow
              * @brief getHashesToCrack Retrieves the login hash pair to crack
              * @param filepath filepath to the file full of hashes
              */
-            void getHashesToCrack(const std::string &filepath);
+            std::vector<std::string> getHashesToCrack();
 
 
         public:

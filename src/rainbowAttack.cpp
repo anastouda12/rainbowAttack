@@ -6,51 +6,64 @@ namespace rainbow
 
     RainbowAttack::RainbowAttack(std::string &&hashToCrackFilePath):
         rainbowTableFile_{},
-        hashesToCrack_{},
-        passwordCracked_{}
+        passwordCracked_{},
+        passwordHashes_{},
+        INDEX_MIN_RT{getMinIndexTable()},
+        INDEX_MAX_RT{getMaxIndexTable()}
     {
-        getHashesToCrack(hashToCrackFilePath);
-        hashToCrackFilePath.reserve(100);
+
+        passwordHashes_.open(hashToCrackFilePath, std::ios::in);
+        rainbowTableFile_.open(FILE_NAME_RTABLE, std::ios::in | std::ios::binary);
+
+        if (rainbowTableFile_.fail())
+        {
+            std::cerr << "[ERROR] : RainbowTable file : " << FILE_NAME_RTABLE << " failed to opening" << std::endl;
+            exit(-3);
+        }
+
+        if (passwordHashes_.fail())
+        {
+            std::cerr << "[ERROR] : Password hashes file : " << hashToCrackFilePath << " failed to opening" << std::endl;
+            exit(-3);
+        }
+
+
     }
 
-    void RainbowAttack::getHashesToCrack(const std::string &filepath)
+
+
+    std::vector<std::string> RainbowAttack::getHashesToCrack()
     {
-        std::ifstream in(filepath);
+        std::vector<std::string> vecHashes;
+        vecHashes.reserve(100); // 100 passwords +-
+        std::string hash(SHA256_BLOCKSIZE, ' ');
 
-        if (in.fail())
+        while (std::getline(passwordHashes_, hash))
         {
-            std::cerr << "[ERROR] : " << "cannot open the file : " << filepath <<
-                      std::endl;
-            std::exit(-6);
+            vecHashes.push_back(std::move(hash));
         }
 
-        std::string hash(SHA256_LENGTH, ' ');
-
-        while (std::getline(in, hash))
-        {
-            hashesToCrack_.push_back(std::move(hash));
-        }
-
-        in.close();
+        passwordHashes_.close();
+        return vecHashes;
     }
 
     void RainbowAttack::attack()
     {
 
-        passwordCracked_.open("passCracked.txt", std::ios::binary);
+        passwordCracked_.open(PASSWORD_CRACKED_FILE, std::ios::binary);
+        std::vector<std::string> &&hashes = getHashesToCrack();
 
-        for (std::string hash : this->hashesToCrack_)
+        for (auto hash : hashes)
         {
             passwordCracked_ << crackPassword(hash) << std::endl;
         }
 
         passwordCracked_.close();
+        rainbowTableFile_.close();
     }
 
     RainbowAttack::~RainbowAttack()
     {
-        this->hashesToCrack_.clear();
-
     }
 
 

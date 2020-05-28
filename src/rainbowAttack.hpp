@@ -4,13 +4,14 @@
 #include <fstream>
 #include <vector>
 #include "src/utils.hpp"
-#include "src/sha256.h"
-#include "src/reduction.hpp"
-
 
 namespace rainbow
 {
 
+    /**
+     * @brief The RainbowAttack class
+     * Used to attempt an RainbowAttack with SHA256 algorithm.
+     */
     class RainbowAttack
     {
 
@@ -19,64 +20,47 @@ namespace rainbow
             /**
              * @brief File containing the rainbow table.
              */
-            std::ifstream rainbowTableFile_;
+            ifstream rainbowTableFile_;
 
             /**
              * @brief passwordCracked_ File containing the passwords cracked
              */
-            std::ofstream passwordCracked_;
+            ofstream passwordCracked_;
 
             /**
              * @brief File containing the hashes.
              */
-            std::ifstream passwordHashes_;
+            ifstream passwordHashes_;
 
+            /**
+             * @brief INDEX_MIN_RT
+             * Index min of the rainbowTable
+             */
             const int INDEX_MIN_RT;
+
+            /**
+             * @brief INDEX_MAX_RT
+             * Index max of the rainbowTable
+             */
             const int INDEX_MAX_RT;
 
 
             /**
-             * @brief crackPassword Crack hash of a password
-             * @param hash hash to retrieve password
-             * @return password cracked if not empty string
+             * @brief crackPassword
+             * Crack a password of a hash given.
+             * @param hash the hash of the password to crack.
+             * @param rtable the rainbowtable , we use here a different ifstream for each threads to have different handler for
+             * each of them.
+             * @return the password cracked or "NOTFOUND" if its fail
              */
-            inline std::string crackPassword(
-                    std::string &hash)
-            {
-                RTChain chain;
-                searchChain(hash, chain);
+            string crackPassword(const string &hash, ifstream &rtable);
 
-                if (!isEmptyChain(chain))
-                {
-                    return buildUpPassword(hash, chain);
-                }
-
-                return "NOTFOUNDCHAIN";
-            }
-
-
-            constexpr void searchChain(std::string &hash, RTChain &chain)
-            {
-                char current [SHA256_BLOCKSIZE] = "";
-
-                for (unsigned i = HASH_LEN - 1; i > 0; --i)
-                {
-                    copyArrays(hash.c_str(), current, SHA256_BLOCKSIZE);
-
-                    for (unsigned j = i; j < HASH_LEN; ++j)
-                    {
-                        reduce(current, chain.tail, j, PASSWORD_SIZE);
-                        copyArrays(sha256(chain.tail).c_str(), current, SHA256_BLOCKSIZE);
-                    }
-
-                    pwdBinarySearch(chain.tail, chain, INDEX_MIN_RT, INDEX_MAX_RT);
-
-                    if (!isEmptyChain(chain))
-                    {
-                        break;
-                    }
-                }
-            }
+            /**
+             * @brief crackSomePasswords
+             * Crack some passwords inside a vector [work of a thread].
+             * @param vec vector containing the hashes to crack
+             */
+            void crackSomePasswords(vector<string> &vec);
 
 
             /**
@@ -85,140 +69,95 @@ namespace rainbow
              * @param chain the chain where the result chain will be - If found, if not found the chain will be empty
              * @param min Mini index of RT
              * @param max Max index of RT
+             * @return return true if the entry is found.
              */
-            constexpr void pwdBinarySearch(std::string &&reduc, RTChain &chain, int min, int max)
-            {
-                if (rainbowTableFile_.is_open())
-                {
-                    bool found = false;
-                    int mid =  mid = (min + max) >> 1;
-                    int comp = 0;
-                    rainbowTableFile_.clear();
-                    rainbowTableFile_.seekg(0, std::ios::beg);
+            bool pwdBinarySearch(const char *tail, rtEntry &chain, ifstream &rtable);
 
-                    while (min <= max)
-                    {
-                        rainbowTableFile_.seekg(mid * RTCHAIN_SIZE);
-                        rainbowTableFile_.read((char *) &chain, RTCHAIN_SIZE);
-                        comp = reduc.compare(chain.tail);
+            /**
+             * @brief buildUpPassword
+             * Build up the password with the hash and the chain possibly containing the hash.
+             * @param hash the hash of the password
+             * @param chain the chain possibly containing the hash
+             * @param password variable where to put the password.
+             * @return true if the build up was successful
+             */
+            bool buildUpPassword(const string &hash, rtEntry &chain, string &password);
 
-                        if (comp == 0)
-                        {
-                            found = true;
-                            break;
-                        }
-                        else if (comp < 0)
-                        {
-                            max = mid - 1;
-                        }
-                        else
-                        {
-                            min = mid + 1;
-                        }
+            /**
+             * @brief getHashesToCrack
+             * Retrieves hashes to crack in x vector, where x is number of thread
+             */
+            vector<vector<string>> getHashesToCrack();
 
-                        mid = (min + max) >> 1;
-                    }
-
-                    if (!found)
-                    {
-                        chain = RTChain();        // Chain not found - reset
-                    }
-                }
-            }
-
-
+            /**
+             * @brief getMinIndexTable
+             * Get the first index of the RainbowTable
+             * @return first index.
+             */
             constexpr int getMinIndexTable()
             {
                 int min = -1;
 
                 if (!rainbowTableFile_.is_open())
                 {
-                    rainbowTableFile_.open(FILE_NAME_RTABLE, std::ios::in | std::ios::binary);
+                    rainbowTableFile_.open(FILE_NAME_RTABLE, ios::in | ios::binary);
                 }
 
                 if (!rainbowTableFile_.fail())
                 {
-                    min = rainbowTableFile_.seekg(0, std::ios::beg).tellg() / RTCHAIN_SIZE;
+                    min = rainbowTableFile_.seekg(0, ios::beg).tellg() / RTENTRY_SIZE;
                     rainbowTableFile_.clear();
                     rainbowTableFile_.close();
                 }
                 else
                 {
-                    std::cerr << "[ERROR] : RainbowTable file : " << FILE_NAME_RTABLE << " failed to opening" << std::endl;
-                    exit(-3);
+                    cerr << "[ERROR] : RainbowTable file : " << FILE_NAME_RTABLE << " failed to opening" << endl;
+                    exit(EXIT_FAILURE);
                 }
 
                 return min;
             }
 
+            /**
+             * @brief getMaxIndexTable
+             * Get the last index of the RainbowTable
+             * @return last index.
+             */
             constexpr int getMaxIndexTable()
             {
                 int max = -1;
 
                 if (!rainbowTableFile_.is_open())
                 {
-                    rainbowTableFile_.open(FILE_NAME_RTABLE, std::ios::in | std::ios::binary);
+                    rainbowTableFile_.open(FILE_NAME_RTABLE, ios::in | ios::binary);
                 }
 
                 if (!rainbowTableFile_.fail())
                 {
-                    max = rainbowTableFile_.seekg(0, std::ios::end).tellg() / RTCHAIN_SIZE;
+                    max = rainbowTableFile_.seekg(0, ios::end).tellg() / RTENTRY_SIZE;
                     rainbowTableFile_.clear();
                     rainbowTableFile_.close();
                 }
                 else
                 {
-                    std::cerr << "[ERROR] : RainbowTable file : " << FILE_NAME_RTABLE << " failed to opening" << std::endl;
-                    exit(-3);
+                    cerr << "[ERROR] : RainbowTable file : " << FILE_NAME_RTABLE << " failed to opening" << endl;
+                    exit(EXIT_FAILURE);
                 }
 
                 return max;
             }
 
-
-            std::string buildUpPassword(std::string &hash, RTChain &chain)
-            {
-                std::string previous;
-                std::string current;
-                char reduction[PASSWORD_SIZE + 1];
-                unsigned step{0};
-                bool found{false};
-                current = chain.head;
-
-                while (step < HASH_LEN && !found)
-                {
-                    previous = current;
-                    current = sha256(current);
-                    found = current.compare(hash) == 0;
-                    reduce(current, reduction, step, PASSWORD_SIZE);
-                    current = reduction;
-                    ++step;
-                }
-
-                if (!found)
-                {
-                    return "NOTFOUND";
-                }
-
-                return previous;
-
-            }
-
-            /**
-             * @brief getHashesToCrack Retrieves the login hash pair to crack
-             * @param filepath filepath to the file full of hashes
-             */
-            std::vector<std::string> getHashesToCrack();
-
-
         public:
-
 
             /**
              * @brief RainbowAttack Constructor of the rainbowAttack
              * @param hashToCrackFile file containing the hashes to crack
              */
-            RainbowAttack(std::string &&hashToCrackFile);
+            RainbowAttack(const string &hashToCrackFile);
+
+            /**
+              *@brief RainbowAttack destructor.
+              */
             ~RainbowAttack();
 
             /**

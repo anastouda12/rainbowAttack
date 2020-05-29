@@ -30,12 +30,12 @@ namespace rainbow
     {
         vector<vector<string>> vecFather;
         vecFather.reserve(num_cpus);
-        unsigned nbHashes = count(istreambuf_iterator<char>(passwordHashes_),
-                                  istreambuf_iterator<char>(), '\n');
+        const unsigned nbHashes = count(istreambuf_iterator<char>(passwordHashes_),
+                                        istreambuf_iterator<char>(), '\n');
         passwordHashes_.clear();
         passwordHashes_.seekg(0, ios_base::beg);
-        unsigned nbHashesPerVec = nbHashes / num_cpus;
-        unsigned nbHashesVecOne = nbHashesPerVec + (nbHashes % num_cpus);
+        const unsigned nbHashesPerVec = nbHashes / num_cpus;
+        const unsigned nbHashesVecOne = nbHashesPerVec + (nbHashes % num_cpus);
 
         for (unsigned i = 0; i < num_cpus; ++i)  //init vector of futur passwords inside vector vecFather
         {
@@ -164,7 +164,7 @@ namespace rainbow
         return false;
     }
 
-    bool RainbowAttack::buildUpPassword(const string &hash, rtEntry &chain, string &password)
+    bool RainbowAttack::buildUpPassword(const string &hash, const rtEntry &chain, string &password)
     {
         string current = chain.head;
         string previous = current;
@@ -193,7 +193,7 @@ namespace rainbow
 
     void RainbowAttack::crackSomePasswords(vector<string> &vec)
     {
-        ifstream rtable;
+        ifstream rtable; // needed to have a handler for each thread
         rtable.open(FILE_NAME_RTABLE, ios::in | ios::binary);
 
         if (rtable.fail())
@@ -222,7 +222,7 @@ namespace rainbow
         cout << "[INFO] Launch of " << num_cpus << " threads for the attack" << endl;
         cout << "[INFO] RainbowAttack in progress ..." << endl;
         vector<vector<string>> &&hashes = getHashesToCrack();
-        auto start = high_resolution_clock::now();
+        const auto start = high_resolution_clock::now();
         ThreadPool pool(num_cpus, true);
 
         for (unsigned i = 0; i < num_cpus; ++i)
@@ -241,8 +241,8 @@ namespace rainbow
             }
         }
 
-        auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<milliseconds>(stop - start);
+        const auto stop = high_resolution_clock::now();
+        const auto duration = duration_cast<milliseconds>(stop - start);
         passwordCracked_.close();
         cout << "\33[2K\r[SUCCES] Passwords cracked was generated on file Build/" << PASSWORD_CRACKED_FILE << endl;
         printDuration(duration);

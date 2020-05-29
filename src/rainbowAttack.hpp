@@ -81,7 +81,7 @@ namespace rainbow
              * @param password variable where to put the password.
              * @return true if the build up was successful
              */
-            bool buildUpPassword(const string &hash, rtEntry &chain, string &password);
+            bool buildUpPassword(const string &hash, const rtEntry &chain, string &password);
 
             /**
              * @brief getHashesToCrack

@@ -32,7 +32,7 @@ namespace rainbow
              * different files for different thread.
              * @param nbchain_by_cpu number of chain to generate.
              */
-            void generateMiniTable(const string &fileName, const int nbchain_by_cpu);
+            void generateMiniTable(const string &fileName, unsigned nbchain_by_cpu);
 
             /**
              * @brief buildPrecomputedHashChain
@@ -61,7 +61,7 @@ namespace rainbow
              * @param set_table the set to put into all entry, to sort the table.
              * @param nb_table the number of miniRainbowTable.
              */
-            void combineOrderedMiniTableIntoSet(const string *filesName, set<rtEntry> &set_table, const unsigned nb_table);
+            void combineOrderedMiniTableIntoSet(const string *filesName, set<rtEntry> &set_table, unsigned nb_table);
 
         public :
 
@@ -70,7 +70,7 @@ namespace rainbow
              * @param size Size in MB of the table
              * @param pwdLength Length of passwords
              */
-            RainbowTableGen(const float size);
+            RainbowTableGen(float size);
 
             /**
              * @brief RainbowTableGen destructor.

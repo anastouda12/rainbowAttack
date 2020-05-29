@@ -23,11 +23,10 @@ namespace rainbow
 
     static const unsigned num_cpus = thread::hardware_concurrency(); // number optimal thread
     constexpr const unsigned PASSWORD_SIZE = 8;
-    constexpr const int HASH_LEN = 6000;
+    constexpr const int HASH_LEN = 5000;
     constexpr const unsigned SHA256_DIGEST_SIZE = 32;
     constexpr const unsigned SHA256_BLOCKSIZE = 64;
     constexpr int ALPHABET_SIZE = 62;
-    constexpr unsigned MB_TO_BYTE = 1048576;
 
     /**
      * @brief The rtChain struct Chain of a rainbowTable with the head and the tail
@@ -51,14 +50,14 @@ namespace rainbow
         return chain.head[0] == '\0' && chain.tail[0] == '\0';
     }
 
-    constexpr float getSizeOnBytes(const float mb)
+    constexpr float getSizeOnBytes(float mb)
     {
-        return mb * MB_TO_BYTE;
+        return mb * 1000000;
     }
 
-    constexpr float getSizeOnMegaBytes(const float bytes)
+    constexpr float getSizeOnMegaBytes(float bytes)
     {
-        return bytes /  MB_TO_BYTE;
+        return bytes /  1000000;
     }
 
 

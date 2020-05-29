@@ -44,8 +44,7 @@ static int commandManager(int argc, char **argv)
 
         try
         {
-            float size_table = stof(argv[2]);
-            RainbowTableGen gen{size_table};
+            RainbowTableGen gen{stof(argv[2])};
             gen.generateTable();
             return EXIT_SUCCESS;
         }

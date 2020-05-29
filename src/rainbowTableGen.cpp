@@ -7,7 +7,7 @@
 
 namespace rainbow
 {
-    RainbowTableGen::RainbowTableGen(const float size):
+    RainbowTableGen::RainbowTableGen(float size):
         size_{size},
         rainbowTableFile_{}
     {}
@@ -27,9 +27,9 @@ namespace rainbow
         cout << "[INFO] : Generation of rainbowTable in progress ..." << flush;
         dg::utils::ThreadPool pool(num_cpus, true);
         string filesName[num_cpus];
-        const int nbchain_table = ceil(getSizeOnBytes(this->size_) / RTENTRY_SIZE);
-        const int nbchain_by_cpu = nbchain_table / num_cpus;
-        auto start = high_resolution_clock::now();
+        const unsigned nbchain_table = ceil(getSizeOnBytes(this->size_) / RTENTRY_SIZE);
+        const unsigned nbchain_by_cpu = nbchain_table / num_cpus;
+        const auto start = high_resolution_clock::now();
         filesName[0] = "miniRainbow1.txt";         //First thread takes the rest of nbr entries k
         pool.enqueue(mem_fn(&RainbowTableGen::generateMiniTable), this,
                      ref(filesName[0]), nbchain_by_cpu + nbchain_table % num_cpus);
@@ -46,14 +46,13 @@ namespace rainbow
         combineOrderedMiniTableIntoSet(filesName, tempSet, num_cpus);
         writePrecomputedValuesIntoTable(tempSet);
         tempSet.clear();
-        auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<milliseconds>(stop - start);
+        const auto stop = high_resolution_clock::now();
+        const auto duration = duration_cast<milliseconds>(stop - start);
         cout << "\33[2K\r[SUCCESS] : RainbowTable was generated on file Build/" << FILE_NAME_RTABLE  << endl;
         printDuration(duration);
     }
 
-    void RainbowTableGen::generateMiniTable(const string &fileName,
-                                            const int nbchain_by_cpu)
+    void RainbowTableGen::generateMiniTable(const string &fileName, unsigned nbchain_by_cpu)
     {
         if (nbchain_by_cpu > 0)
         {
@@ -68,7 +67,7 @@ namespace rainbow
 
             rtEntry precomputed;
 
-            for (int nbChain = 1; nbChain <= nbchain_by_cpu; ++nbChain)
+            for (unsigned nbChain = 1; nbChain <= nbchain_by_cpu; ++nbChain)
             {
                 buildPrecomputedHashChain(precomputed);
                 table.write((char *) &precomputed, RTENTRY_SIZE);
@@ -79,7 +78,7 @@ namespace rainbow
     }
 
 
-    void RainbowTableGen::combineOrderedMiniTableIntoSet(const string *filesName, set<rtEntry> &set_table, const unsigned nb_table)
+    void RainbowTableGen::combineOrderedMiniTableIntoSet(const string *filesName, set<rtEntry> &set_table, unsigned nb_table)
     {
         ifstream table;
 
@@ -107,8 +106,7 @@ namespace rainbow
         }
     }
 
-    inline void RainbowTableGen::writePrecomputedValuesIntoTable(
-            const set<rtEntry> &entries)
+    inline void RainbowTableGen::writePrecomputedValuesIntoTable(const set<rtEntry> &entries)
     {
         rainbowTableFile_.open(FILE_NAME_RTABLE,
                                ios::out | ios::trunc | ios::binary);

@@ -1,9 +1,11 @@
 #ifndef RAINBOWTABLEGEN_HPP
 #define RAINBOWTABLEGEN_HPP
 
-#include <fstream>
 #include <set>
 #include "src/utils.hpp"
+#include "src/sha256.h"
+#include "src/reduction.hpp"
+#include "passwd-utils.hpp"
 
 namespace rainbow
 {
@@ -34,25 +36,44 @@ namespace rainbow
              */
             void generateMiniTable(const string &fileName, unsigned nbchain_by_cpu);
 
+
             /**
              * @brief buildPrecomputedHashChain
              * Build a precomputed hashChain.
              * @param chain the chain to generate.
              */
-            void buildPrecomputedHashChain(rtEntry &chain);
+            inline void buildPrecomputedHashChain(rtEntry &chain)
+            {
+                string password = generate_passwd(PASSWORD_SIZE);
+                strncpy(chain.head, password.c_str(), sizeof(rtEntry::head));
+                calculTail(password, chain.tail);
+            }
+
 
             /**
              * @brief calculTail Calcul the tail of a password given.
              * @param password Password to calcul the tail
              * @return the tail of the passwords
              */
-            void calculTail(string &&password, char *tail);
+            constexpr void calculTail(string &password, char *tail)
+            {
+
+                for (unsigned step = 0; step < HASH_LEN; ++step)
+                {
+                    password = sha256(password);
+                    REDUCE(password, tail, step);
+                    password = string(tail, PASSWORD_SIZE);
+                }
+
+
+            }
 
             /**
              * @brief writePrecomputedValuesIntoTable Write all precomputed value of the rainbowTable
              * @param entries temporary set ordered of the rainbowTable
              */
             void writePrecomputedValuesIntoTable(const set<rtEntry> &entries);
+
 
             /**
              * @brief combineOrderedMiniTableIntoSet

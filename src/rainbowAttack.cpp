@@ -15,11 +15,37 @@ namespace rainbow
         INDEX_MIN_RT{getMinIndexTable()},
         INDEX_MAX_RT{getMaxIndexTable()}
     {
+        // Some verifications
         passwordHashes_.open(hashToCrackFilePath, ios::in);
+        rainbowTableFile_.open(FILE_NAME_RTABLE, ios::in | ios::binary);
 
         if (passwordHashes_.fail())
         {
             cerr << "[ERROR] : Password hashes file : " << hashToCrackFilePath << " failed to opening" << endl;
+            rainbowTableFile_.close();
+            exit(EXIT_FAILURE);
+        }
+
+        if (rainbowTableFile_.fail())
+        {
+            cerr << "[ERROR] : RainbowTable file : " << FILE_NAME_RTABLE << " failed to opening" << endl;
+            passwordHashes_.close();
+            exit(EXIT_FAILURE);
+        }
+
+        if (is_emptyFile(passwordHashes_))
+        {
+            cerr << "[ERROR] : Password hashes file is empty : " << hashToCrackFilePath << endl;
+            passwordHashes_.close();
+            rainbowTableFile_.close();
+            exit(EXIT_FAILURE);
+        }
+
+        if (is_emptyFile(rainbowTableFile_))
+        {
+            cerr << "[ERROR] : RainbowTable file is empty : " << FILE_NAME_RTABLE << endl;
+            passwordHashes_.close();
+            rainbowTableFile_.close();
             exit(EXIT_FAILURE);
         }
     }
@@ -95,22 +121,23 @@ namespace rainbow
         string current(SHA256_BLOCKSIZE, ' ');
         string possPassword(PASSWORD_SIZE, ' ');
         rtEntry chain;
-        char tail[PASSWORD_SIZE + 1];
+        char tail[PASSWORD_SIZE] = {0};
 
-        for (unsigned i = HASH_LEN; i-- > 0;) // Search of chain
+        for (int i = HASH_LEN - 1; i >= 0; --i) // Search of chain
         {
             current = hash;
 
-            for (unsigned j = i; j < HASH_LEN; ++j)
+            for (int j = i; j < HASH_LEN; ++j)
             {
-                REDUCE(current, tail, j, PASSWORD_SIZE);
-                current = sha256(tail);
+                REDUCE(current, tail, j);
+                current = sha256(string(tail, PASSWORD_SIZE));
             }
 
             if (pwdBinarySearch(tail, chain, rtable)) //  Possible chain found -> build up
             {
                 if (buildUpPassword(hash, chain, possPassword))
                 {
+                    cout << "trouvé :)" << endl;
                     return possPassword;
                 }
                 else
@@ -132,7 +159,7 @@ namespace rainbow
         {
             int min = INDEX_MIN_RT;
             int max = INDEX_MAX_RT;
-            int mid =  mid = (min + max) >> 1;
+            int mid = (min + max) >> 1;
             int comp = 0;
             rtable.clear();
             rtable.seekg(0, ios::beg);
@@ -141,7 +168,7 @@ namespace rainbow
             {
                 rtable.seekg(mid * RTENTRY_SIZE);
                 rtable.read((char *) &chain, RTENTRY_SIZE);
-                comp = strcmp(tail, chain.tail);
+                comp = strncmp(tail, chain.tail, sizeof(rtEntry::tail));
 
                 if (comp == 0)
                 {
@@ -166,9 +193,9 @@ namespace rainbow
 
     bool RainbowAttack::buildUpPassword(const string &hash, const rtEntry &chain, string &password)
     {
-        string current = chain.head;
+        string current(chain.head, sizeof(rtEntry::head));
         string previous = current;
-        char reduction[PASSWORD_SIZE + 1];
+        char reduction[PASSWORD_SIZE];
         unsigned step = 0;
 
         while (step < HASH_LEN)
@@ -182,8 +209,8 @@ namespace rainbow
                 return true;
             }
 
-            REDUCE(current, reduction, step, PASSWORD_SIZE);
-            current = reduction;
+            REDUCE(current, reduction, step);
+            current = string(reduction, PASSWORD_SIZE);
             ++step;
         }
 
@@ -202,10 +229,12 @@ namespace rainbow
             exit(EXIT_FAILURE);
         }
 
-        for (unsigned i = 0; i < vec.size(); ++i)
+        for (size_t i = 0; i < vec.size(); ++i)
         {
             vec[i] = crackPassword(vec.at(i), rtable);
         }
+
+        rtable.close();
     }
 
     void RainbowAttack::attack()
@@ -218,19 +247,24 @@ namespace rainbow
             exit(EXIT_FAILURE);
         }
 
-        cout << "[INFO] RainbowAttack started" << endl;
-        cout << "[INFO] Launch of " << num_cpus << " threads for the attack" << endl;
-        cout << "[INFO] RainbowAttack in progress ..." << endl;
-        vector<vector<string>> &&hashes = getHashesToCrack();
+        cout << "[INFO] : RainbowAttack started" << endl;
+        vector<vector<string>> hashes = getHashesToCrack();
         const auto start = high_resolution_clock::now();
         ThreadPool pool(num_cpus, true);
+        unsigned nbThreadUsed = 0;
 
         for (unsigned i = 0; i < num_cpus; ++i)
         {
-            pool.enqueue(mem_fn(&RainbowAttack::crackSomePasswords), this,
-                         ref(hashes.at(i)));
+            if (!hashes.at(i).empty())
+            {
+                pool.enqueue(mem_fn(&RainbowAttack::crackSomePasswords), this,
+                             ref(hashes.at(i)));
+                ++nbThreadUsed;
+            }
         }
 
+        cout << "[INFO] : Launch of " << nbThreadUsed << " thread(s) for the attack" << endl;
+        cout << "[INFO] : RainbowAttack in progress ..." << flush;
         pool.join();
 
         for (auto thwork : hashes)

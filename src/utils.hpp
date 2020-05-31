@@ -2,6 +2,7 @@
 #define UTILS_HPP
 
 #include <iostream>
+#include <fstream>
 #include <thread>
 
 using namespace std;
@@ -33,8 +34,8 @@ namespace rainbow
      */
     struct rtEntry
     {
-        char head[PASSWORD_SIZE + 1];
-        char tail[PASSWORD_SIZE + 1];
+        char head[PASSWORD_SIZE];
+        char tail[PASSWORD_SIZE];
     };
 
     inline bool operator<(const rtEntry lhs,
@@ -43,11 +44,16 @@ namespace rainbow
         return strncmp(lhs.tail, rhs.tail, PASSWORD_SIZE) < 0;
     }
 
-    constexpr const unsigned RTENTRY_SIZE = sizeof(rainbow::rtEntry);
+    constexpr const unsigned RTENTRY_SIZE = sizeof(rtEntry);
 
-    constexpr bool isEmptyChain(rtEntry chain)
+    constexpr bool isEmptyChain(const rtEntry chain)
     {
         return chain.head[0] == '\0' && chain.tail[0] == '\0';
+    }
+
+    inline bool is_emptyFile(std::ifstream &pFile)
+    {
+        return pFile.peek() == std::ifstream::traits_type::eof();
     }
 
     constexpr float getSizeOnBytes(float mb)
@@ -61,14 +67,13 @@ namespace rainbow
     }
 
 
-    constexpr void copyArrays(const char *src, char *dest, unsigned size_dest)
+    constexpr void copyArrays(const char *src, char *dest, size_t size_dest)
     {
-        for (unsigned i = 0; i < size_dest; i++)
+        for (size_t i = 0; i < size_dest; i++)
         {
             dest[i] = src[i];
         }
 
-        dest[size_dest] = '\0';
     }
 
     constexpr unsigned msToMinute(long ms)

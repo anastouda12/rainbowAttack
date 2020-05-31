@@ -16,4 +16,4 @@
 7 chain length - 1GB -  28min18s - Merge10min - Crack100K 11s
 10K chain - 0.05 - 1min28 - CRACK11Minute 3 password
 2K chain - 1MB - 6min - CRACK 17 min
-
+5K chain - 10MB - 2H13min - BUT 8 PASSWORD SIZE ! 

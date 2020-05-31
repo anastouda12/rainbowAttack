@@ -1,7 +1,6 @@
 #ifndef RAINBOWATTACK_HPP
 #define RAINBOWATTACK_HPP
 
-#include <fstream>
 #include <vector>
 #include "src/utils.hpp"
 
@@ -96,7 +95,7 @@ namespace rainbow
              */
             constexpr int getMinIndexTable()
             {
-                int min = -1;
+                int min = 0;
 
                 if (!rainbowTableFile_.is_open())
                 {
@@ -125,7 +124,7 @@ namespace rainbow
              */
             constexpr int getMaxIndexTable()
             {
-                int max = -1;
+                int max = 0;
 
                 if (!rainbowTableFile_.is_open())
                 {

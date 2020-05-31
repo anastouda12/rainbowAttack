@@ -1,16 +1,18 @@
 #include "src/rainbowTableGen.hpp"
 #include "src/threadpool.hpp"
-#include "src/sha256.h"
-#include "passwd-utils.hpp"
-#include "src/reduction.hpp"
-
 
 namespace rainbow
 {
     RainbowTableGen::RainbowTableGen(float size):
         size_{size},
         rainbowTableFile_{}
-    {}
+    {
+        if (size < getSizeOnMegaBytes(RTENTRY_SIZE)) // size of an entry of the table.
+        {
+            cerr << "[ERROR] : Size < 16 bytes not enougth to generate RainbowTable, increase the size please !" << endl;
+            exit(EXIT_FAILURE);
+        }
+    }
 
     RainbowTableGen::~RainbowTableGen()
     {
@@ -23,27 +25,33 @@ namespace rainbow
     void RainbowTableGen::generateTable()
     {
         cout << "[INFO] : Generation of rainbowTable started" << endl;
-        cout << "[INFO] : Launch of " << num_cpus << " threads for the generation" << endl;
-        cout << "[INFO] : Generation of rainbowTable in progress ..." << flush;
         dg::utils::ThreadPool pool(num_cpus, true);
-        string filesName[num_cpus];
+        string filesName[num_cpus]; // filesName containing the miniRainbowTable.
         const unsigned nbchain_table = ceil(getSizeOnBytes(this->size_) / RTENTRY_SIZE);
         const unsigned nbchain_by_cpu = nbchain_table / num_cpus;
+        unsigned nbThread_launch = 0;
         const auto start = high_resolution_clock::now();
-        filesName[0] = "miniRainbow1.txt";         //First thread takes the rest of nbr entries k
+        filesName[0] = "miniRainbow1.txt";
         pool.enqueue(mem_fn(&RainbowTableGen::generateMiniTable), this,
-                     ref(filesName[0]), nbchain_by_cpu + nbchain_table % num_cpus);
+                     ref(filesName[0]), nbchain_by_cpu + (nbchain_table % num_cpus)); //First thread takes the rest of nbr entries
+        nbThread_launch++;
 
-        for (unsigned int i = 1; i < num_cpus; ++i)
+        if (nbchain_by_cpu > 0) // checks that they are works for other threads
         {
-            filesName[i] = "miniRainbow" + to_string(i + 1) + ".txt";
-            pool.enqueue(mem_fn(&RainbowTableGen::generateMiniTable), this,
-                         ref(filesName[i]), nbchain_by_cpu);
+            for (unsigned i = 1; i < num_cpus; ++i)
+            {
+                filesName[i] = "miniRainbow" + to_string(i + 1) + ".txt";
+                pool.enqueue(mem_fn(&RainbowTableGen::generateMiniTable), this,
+                             ref(filesName[i]), nbchain_by_cpu);
+                nbThread_launch++;
+            }
         }
 
+        cout << "[INFO] : Launch of " << nbThread_launch << " thread(s) for the generation" << endl;
+        cout << "[INFO] : Generation of rainbowTable in progress ..." << flush;
         pool.join();
         set<rtEntry> tempSet;
-        combineOrderedMiniTableIntoSet(filesName, tempSet, num_cpus);
+        combineOrderedMiniTableIntoSet(filesName, tempSet, nbThread_launch);
         writePrecomputedValuesIntoTable(tempSet);
         tempSet.clear();
         const auto stop = high_resolution_clock::now();
@@ -56,11 +64,11 @@ namespace rainbow
     {
         if (nbchain_by_cpu > 0)
         {
-            ofstream table(fileName, ios_base::out | ios_base::trunc | ios_base::binary);
+            ofstream table(fileName, ios_base::out | ios_base::binary | ios_base::trunc);
 
             if (!table.is_open())
             {
-                cout << "[ERROR] : Opening file " << fileName << "Thread : " <<
+                cerr << "[ERROR] : Opening file " << fileName << " Thread : " <<
                      this_thread::get_id() << endl;
                 return;
             }
@@ -103,45 +111,30 @@ namespace rainbow
                 remove((*(filesName + i)).c_str());
 
             }
+            else
+            {
+                cerr << "[ERROR] : Opening file " << *(filesName + i) << endl;
+            }
         }
     }
 
-    inline void RainbowTableGen::writePrecomputedValuesIntoTable(const set<rtEntry> &entries)
+    void RainbowTableGen::writePrecomputedValuesIntoTable(const set<rtEntry> &entries)
     {
         rainbowTableFile_.open(FILE_NAME_RTABLE,
-                               ios::out | ios::trunc | ios::binary);
+                               ios::out | ios::binary | ios::trunc);
 
-        if (rainbowTableFile_.is_open())
+        if (rainbowTableFile_.fail())
         {
-
-            for (auto chain : entries)
-            {
-                this->rainbowTableFile_.write((char *) &chain, RTENTRY_SIZE);
-            }
-
-            rainbowTableFile_.close();
+            cerr << "[ERROR] : RainbowTable file : " << FILE_NAME_RTABLE << " failed to opening" << endl;
+            exit(EXIT_FAILURE);
         }
 
-    }
-
-    inline void RainbowTableGen::calculTail(string &&password, char *tail)
-    {
-        string hash = move(password);
-
-        for (unsigned step = 0; step < HASH_LEN; ++step)
+        for (auto chain : entries)
         {
-            hash = sha256(hash);
-            REDUCE(hash, tail, step, PASSWORD_SIZE);
-            hash = tail;
+            this->rainbowTableFile_.write((char *) &chain, RTENTRY_SIZE);
         }
 
-    }
-
-    inline void RainbowTableGen::buildPrecomputedHashChain(rtEntry &chain)
-    {
-        string &&password = generate_passwd(PASSWORD_SIZE);
-        copyArrays(password.c_str(), chain.head, PASSWORD_SIZE);
-        calculTail(move(password), chain.tail);
+        rainbowTableFile_.close();
     }
 
 

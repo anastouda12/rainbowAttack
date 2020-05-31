@@ -8,7 +8,7 @@
 
 namespace rainbow
 {
-    std::string generate_passwd(int length)
+    inline std::string generate_passwd(int length)
     {
         static const std::string char_policy =
                 "azertyuiopqsdfghjklmwxcvbnAZERTYUIOPQSDFGHJKLMWXCVBN1234567890";
@@ -26,8 +26,8 @@ namespace rainbow
         return std::string(str);
     }
 
-    void mass_generate(int n, int mc, int MC, const std::string &of_pwd,
-                       const std::string &of_hash)
+    inline void mass_generate(int n, int mc, int MC, const std::string &of_pwd,
+                              const std::string &of_hash)
     {
         std::ofstream passwd_file;
         passwd_file.open(of_pwd);
@@ -61,8 +61,8 @@ namespace rainbow
         return sha256(pwd) == hash;
     }
 
-    double mass_check(const std::string &if_pwd,
-                      const std::string &if_hash)
+    inline double mass_check(const std::string &if_pwd,
+                             const std::string &if_hash)
     {
         std::ifstream passwd_file;
         passwd_file.open(if_pwd);

@@ -10,7 +10,7 @@ using namespace rainbow;
  */
 static void help()
 {
-    cerr << "[USAGE]: " << "'./RainbowAttack command option', where :" << endl;
+    cerr << "[USAGE]: " << "./RainbowAttack command option, where :" << endl;
     cerr << "- command 'generate' to generate a rainbow table" << endl;
     cerr << "- command 'attack' to execute a rainbow attack" << endl;
     cerr << "- option size of table in MB with command 'generate'" << endl;

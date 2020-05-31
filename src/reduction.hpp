@@ -3,18 +3,6 @@
 
 #include "utils.hpp"
 
-#define REDUCE(hash,red,col,len)\
-    do{\
-        int cur_in = 0;\
-        unsigned char bytes[SHA256_DIGEST_SIZE];\
-        hex2bin(hash.c_str(),bytes);\
-        for(unsigned i = 0;i<len;++i){\
-            cur_in = bytes[((i+col)&(SHA256_DIGEST_SIZE-1))];\
-            red[i] =ALPHABET[cur_in%ALPHABET_SIZE];\
-        }\
-        red[len] ='\0';\
-    }while(0)\
-
 namespace rainbow
 {
 
@@ -32,6 +20,19 @@ namespace rainbow
         }
 
         return len;
+    }
+
+    constexpr void REDUCE(const string &hash, char *red, unsigned col, unsigned len = PASSWORD_SIZE)
+    {
+        unsigned cur_in = 0;
+        unsigned char bytes[SHA256_DIGEST_SIZE] = {0};
+        hex2bin(hash.c_str(), bytes);
+
+        for (unsigned i = 0; i < len; ++i)
+        {
+            cur_in = bytes[((i + col) & (SHA256_DIGEST_SIZE - 1))];
+            red[i] = ALPHABET[cur_in % ALPHABET_SIZE];
+        }
     }
 
 } // end namespace rainbow

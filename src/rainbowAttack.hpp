@@ -64,10 +64,8 @@ namespace rainbow
 
             /**
              * @brief pwdBinarySearch Binary search inside the rainbowtable to retrieves the chain who has the tail reduce given in param
-             * @param reduc the reduction given to checks in the rainbowtable
-             * @param chain the chain where the result chain will be - If found, if not found the chain will be empty
-             * @param min Mini index of RT
-             * @param max Max index of RT
+             * @param reduc the reduction given to checks in the rainbowtable if its a tail.
+             * @param chain the chain where the result chain will be - If found.
              * @return return true if the entry is found.
              */
             bool pwdBinarySearch(const char *tail, rtEntry &chain, ifstream &rtable);
@@ -90,7 +88,8 @@ namespace rainbow
 
             /**
              * @brief getMinIndexTable
-             * Get the first index of the RainbowTable
+             * Get the first index of the RainbowTable, method used here to avoid multiple .seekg(..beg)
+             * to get the first index in dichotomic search.
              * @return first index.
              */
             constexpr int getMinIndexTable()
@@ -119,7 +118,8 @@ namespace rainbow
 
             /**
              * @brief getMaxIndexTable
-             * Get the last index of the RainbowTable
+             * Get the last index of the RainbowTable,method used here to avoid multiple .seekg(..end)
+             * to get the last index in dichotomic search.
              * @return last index.
              */
             constexpr int getMaxIndexTable()

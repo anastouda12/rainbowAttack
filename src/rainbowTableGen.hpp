@@ -40,7 +40,7 @@ namespace rainbow
             /**
              * @brief buildPrecomputedHashChain
              * Build a precomputed hashChain.
-             * @param chain the chain to generate.
+             * @param chain the chain generated.
              */
             inline void buildPrecomputedHashChain(rtEntry &chain)
             {
@@ -53,7 +53,7 @@ namespace rainbow
             /**
              * @brief calculTail Calcul the tail of a password given.
              * @param password Password to calcul the tail
-             * @return the tail of the passwords
+             * @return the tail of the passwords generated
              */
             constexpr void calculTail(string &password, char *tail)
             {

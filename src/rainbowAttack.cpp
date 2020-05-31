@@ -137,14 +137,8 @@ namespace rainbow
             {
                 if (buildUpPassword(hash, chain, possPassword))
                 {
-                    cout << "trouvé :)" << endl;
                     return possPassword;
                 }
-                else
-                {
-                    cout << "False alarm" << endl;
-                }
-
             }
         }
 

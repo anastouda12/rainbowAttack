@@ -16,7 +16,6 @@ namespace dg
     namespace utils
     {
 
-        //TODO : write ThreadPool::join()
 
         /**
          * Simple alias type for unique locks

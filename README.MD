@@ -26,7 +26,7 @@ command ``` make ```
 Use that followings command in the directory /build
 
 ``` 
-   ./RainbowAttack command option, where :
+   ./RainbowTable command option, where :
    	- command 'generate' to generate a rainbow table
     - command 'attack' to execute a rainbow attack
     - option size of table in MB with command 'generate'
@@ -34,12 +34,12 @@ Use that followings command in the directory /build
  ``` 
 
 ## GENERATE RAINBOWTABLE:
-``` ./rainbowTable generate <size in MB> ```
+``` ./RainbowTable generate <size in MB> ```
 
 The computed table will be located in build directory.
 
 ## CRACK SOME PASSWORDS:
-```./rainbowTable attack <path to file with hashes> ```
+```./RainbowTable attack <path to file with hashes> ```
 
 
 
